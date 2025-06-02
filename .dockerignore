@@ -1,0 +1,53 @@
+# Diretórios comuns que não devem ir para o container
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pdb
+*.egg-info/
+build/
+dist/
+.venv/
+.env/
+.env.*  # arquivos de ambiente
+
+# Arquivos de sistema ou IDEs
+.DS_Store
+Thumbs.db
+*.swp
+.vscode/
+.idea/
+*.log
+
+# Git e controle de versão
+.git/
+.gitignore
+
+# Docker
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Testes (se não fazem parte do build)
+tests/
+*.coverage
+coverage.xml
+htmlcov/
+
+# Dados temporários ou arquivos locais
+*.sqlite3
+*.db
+*.bak
+*.tmp
+*.tar
+*.gz
+*.zip
+
+# Arquivos grandes que não vão para produção
+*.mp4
+*.mov
+*.avi
+*.csv
+*.xls
+*.xlsx
+*.parquet
