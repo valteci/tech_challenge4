@@ -85,3 +85,7 @@ Thumbs.db
 
 # Dados brutos temporários
 data/raw/
+
+
+# Dados csv
+*.csv
