@@ -1,14 +1,5 @@
 import yfinance as yf
 
-symbol = 'WEGE3.SA'
-start_date = '2008-01-01'
-end_date = '2025-05-30'
-# Use a função download para obter os dados
-df = yf.download(symbol, start=start_date, end=end_date)
-df.columns = df.columns.droplevel(1)
-print(df.columns)
-df.to_csv('dados.csv', sep=',')
-
 class Downloader():
     def __init__(self, ticker: str = '', start: str = '', end: str = ''):
         self._ticker = ticker
