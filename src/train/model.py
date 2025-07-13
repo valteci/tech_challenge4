@@ -32,7 +32,5 @@ class StockLSTM(nn.Module):
         return y_pred
 
 
-df = pd.read_csv('raw_data.csv')
-print(df.tail())
 
 
