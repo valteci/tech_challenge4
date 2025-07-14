@@ -8,7 +8,6 @@ import numpy as np
 import pandas as pd
 
 
-
 class Train:
 
     DATA_PATH = 'raw_data.csv'
@@ -180,3 +179,8 @@ hparams = Hparams(
 
 trainner = Train(hparams, 42)
 trainner.train()
+
+
+
+
+

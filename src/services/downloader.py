@@ -51,6 +51,6 @@ class Downloader():
 
     
 
-down = Downloader('WEGE3.SA', '2018-03-03', '2025-03-03')
+down = Downloader('WEGE3.SA', '1990-03-03', '2025-03-03')
 down.download()
 
