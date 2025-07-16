@@ -1,8 +1,8 @@
 import torch
 import numpy as np
 import pandas as pd
-from hyperparamater import Hparams
-from model import StockLSTM
+from src.train.hyperparamater import Hparams
+from src.train.model import StockLSTM
 
 # --- 1) Carrega df e seus hyperparâmetros (mesmos de treino)
 df = pd.read_csv('raw_data.csv', parse_dates=['Date'])

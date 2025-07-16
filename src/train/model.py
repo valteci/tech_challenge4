@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import pandas as pd
-from hyperparamater import Hparams
+from src.train.hyperparamater import Hparams
 
 
 class StockLSTM(nn.Module):

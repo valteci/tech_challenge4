@@ -43,8 +43,8 @@ class Fetch:
         return self._data.tail(self._input_size)
 
 
-fetch = Fetch(stock_name='WEGE3.SA', input_size=60, years_to_fetch=1)
-df = fetch.get_input()
+#fetch = Fetch(stock_name='WEGE3.SA', input_size=60, years_to_fetch=1)
+#df = fetch.get_input()
 
 
 

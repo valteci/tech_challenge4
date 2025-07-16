@@ -20,7 +20,7 @@ RUN pip install --upgrade pip && pip install -r requirements.txt
 COPY . .
 
 ENV FLASK_ENV=development
-ENV FLASK_APP=app.py
+ENV FLASK_APP=src/app.py
 
 EXPOSE 5000
 

@@ -2,17 +2,29 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import TensorDataset, DataLoader
-from hyperparamater import Hparams
-from model import StockLSTM
+from src.train.hyperparamater import Hparams
+from src.train.model import StockLSTM
 import numpy as np
 import pandas as pd
+import os
 
 
 class Train:
 
-    DATA_PATH = 'raw_data.csv'
+    DATA_PATH = './data'
+    SAVING_WEIGHTS_PATH = './saved_weights'
 
-    def __init__(self, hparams: Hparams, seed: int, data: pd.DataFrame = None):
+    def __init__(
+            self,
+            hparams: Hparams,
+            seed: int,
+            features: list[str],
+            data: list[pd.DataFrame] = None
+        ):
+
+        if hparams.input_size != len(features):
+            raise ValueError('input_size deve ser igual ao número de features')
+
         self._hparams = hparams
         self._data = data
         self._X = []
@@ -27,6 +39,7 @@ class Train:
         self._model = StockLSTM(hparams).to(self._device)
         self._loss_function = nn.MSELoss()
         self._seed = seed
+        self._features = features
 
         self._optimizer = optim.Adam(
             self._model.parameters(),
@@ -35,34 +48,58 @@ class Train:
         )
 
 
-    
     # 1) CARREGAR DADOS
     def _load_data(self):
-        df = pd.read_csv(Train.DATA_PATH, parse_dates=['Date'])
-        self._data = df.sort_values('Date').reset_index(drop=True)
+        self._data = []  # esvazia qualquer valor anterior
+        for root, dirs, files in os.walk(Train.DATA_PATH):
+            for fname in files:
+                if fname.lower().endswith('.csv'):
+                    path = os.path.join(root, fname)
+                    df = pd.read_csv(path, parse_dates=['Date'])
+                    df = df.sort_values('Date').reset_index(drop=True)
+                    self._data.append(df)
+        if not self._data:
+            raise FileNotFoundError(f"Nenhum CSV encontrado em '{Train.DATA_PATH}'")
 
 
-    # 2) GERAR SEQUÊNCIAS DE X E Y
+    # 2) GERAR SEQUÊNCIAS DE X E Y (para múltiplos DataFrames)
     def _create_sequences(self):
         """
-        Gera X e y a partir dos dados (_data).
-        coloca o resultado nas propriedades _X e _y
-        _X: shape [n_samples, seq_len, input_size]
-        _y: shape [n_samples, future_steps]
+        Para cada DataFrame em self._data:
+          1) extrai as colunas em self._features → array de shape [n_rows, input_size]
+          2) gera janelas de comprimento sequence_length para X e future_steps para y
         """
-        data = self._data[['Close']].values.astype(np.float32)  # só Close; mude se quiser multifeature
         seq_len = self._hparams.sequence_length
-        fut    = self._hparams.future_steps
+        fut     = self._hparams.future_steps
 
-        self._X, self._y = [], []
-        for i in range(len(data) - seq_len - fut + 1):
-            seq_x = data[i : i + seq_len]             # janela de entrada
-            seq_y = data[i + seq_len : i + seq_len + fut].flatten()  # futuro
-            self._X.append(seq_x)
-            self._y.append(seq_y)
-        self._X = np.stack(self._X)  # [n_samples, seq_len, 1]
-        self._y = np.stack(self._y)  # [n_samples, future_steps]
+        all_X, all_y = [], []
 
+        for df in self._data:
+            # pega as colunas dinâmicas
+            data = df[self._features].values.astype(np.float32)  # [n_rows, input_size]
+            n_rows = data.shape[0]
+            n_samples = n_rows - seq_len - fut + 1
+            if n_samples <= 0:
+                continue  # pula séries muito curtas
+
+            for i in range(n_samples):
+                # janela de entrada: [seq_len, input_size]
+                seq_x = data[i : i + seq_len]
+                # alvo multi‐step: flatten → [future_steps]
+                seq_y = data[i + seq_len : i + seq_len + fut, 0].flatten() \
+                        if self._hparams.future_steps == 1 else \
+                        data[i + seq_len : i + seq_len + fut, 0].flatten()
+                # se você quiser prever apenas a primeira feature (ex: Close) no y,
+                # use data[..., 0], ou ajuste para prever múltiplas features.
+                all_X.append(seq_x)
+                all_y.append(seq_y)
+
+        if not all_X:
+            raise ValueError("Nenhuma sequência foi gerada; verifique self._data e parâmetros.")
+
+        # empilha para formar [total_samples, seq_len, input_size] e [total_samples, future_steps]
+        self._X = np.stack(all_X)
+        self._y = np.stack(all_y)
 
     # 3) DIVISÃO EM TREINO E TESTE
     def _train_test_split(self, train_size: float):
@@ -140,7 +177,11 @@ class Train:
             va_loss = self._eval_epoch()
             if va_loss < best_val:
                 best_val = va_loss
-                torch.save(self._model.state_dict(), 'best_model.pth')
+                torch.save(
+                    self._model.state_dict(),
+                    f'{Train.SAVING_WEIGHTS_PATH}/best_model.pth'
+                )
+                
             print(f"Epoch {epoch:03d} — Train Loss: {tr_loss:.6f} | Val Loss: {va_loss:.6f}")
 
         print("Treino concluído. Melhor Val Loss:", best_val)
@@ -156,29 +197,21 @@ class Train:
     
         self._load_data()
         self._create_sequences()
+        np.set_printoptions(
+            threshold=np.inf,  # Mostra todos os elementos
+            suppress=True,     # Suprime notação científica
+            precision=8,       # Número de casas decimais (ajuste conforme necessário)
+            linewidth=200      # Largura da linha (evita quebras indesejadas)
+        )
+        #with open('arq.txt', 'w') as file:
+        #    file.write(str(self._X))
+        #    file.write('\n===================================\n')
+        #    file.write(str(self._y))
+
+        return
         self._train_test_split(train_size=0.7)
         self._load_data_loader()
         self._train()
-
-
-
-
-hparams = Hparams(
-    input_size      = 1,
-    hidden_size     = 50,
-    num_layers      = 2,
-    dropout         = 0.2,
-    sequence_length = 60,
-    future_steps    = 5,
-    batch_size      = 32,
-    learning_rate   = 1e-3,
-    weight_decay    = 1e-5,
-    n_epochs        = 100,
-    device          = 'cuda'
-)
-
-trainner = Train(hparams, 42)
-trainner.train()
 
 
 

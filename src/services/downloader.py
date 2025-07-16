@@ -1,6 +1,9 @@
 import yfinance as yf
 
 class Downloader():
+
+    SAVING_PATH='./data'
+
     def __init__(self, ticker: str = '', start: str = '', end: str = ''):
         self._ticker = ticker
         self._start = start
@@ -46,11 +49,7 @@ class Downloader():
         )
 
         df.columns = df.columns.droplevel(1)
-        df.to_csv('raw_data.csv', sep=',')
+        df.to_csv(f'{Downloader.SAVING_PATH}/{self._ticker}.csv', sep=',')
 
 
-    
-
-down = Downloader('WEGE3.SA', '1990-03-03', '2025-03-03')
-down.download()
 
