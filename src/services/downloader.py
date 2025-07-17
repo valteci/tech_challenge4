@@ -1,4 +1,6 @@
 import yfinance as yf
+import os
+import shutil
 
 class Downloader():
 
@@ -39,6 +41,27 @@ class Downloader():
     def end(self, value):
         """Setter method"""
         self._end = value
+
+    @staticmethod
+    def _remove_files() -> None:
+        """Remove todos os arquivos da pasta SAVING_PATH"""
+        path = Downloader.SAVING_PATH # pasta que têm os arquivos
+
+        if not os.path.isdir(path):
+            raise ValueError(f'diretório {path} não existe!')
+        
+
+        for file in os.listdir(path):
+            full_path = os.path.join(path, file)
+            try:
+                if os.path.isfile(full_path) or os.path.islink(full_path):
+                    os.remove(full_path)
+                elif os.path.isdir(full_path):
+                    shutil.rmtree(full_path)
+            except Exception as e:
+                print(f"Erro removendo '{full_path}': {e}")
+
+
 
     def download(self):
         """Faz o download dos arquivos"""

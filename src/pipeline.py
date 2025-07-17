@@ -6,7 +6,10 @@ class Pipeline:
     def __init__(self):
         pass
 
+    # FAZ DOWNLOAD DOS DADOS DE TREINO
     def _download_data(self, ticker: (str | list[str]), start: str, end: str) -> None:
+
+        Downloader._remove_files() # Remove os arquivos da pasta de dados
 
         if isinstance(ticker, str):
             down = Downloader(ticker, start, end)
@@ -16,10 +19,13 @@ class Pipeline:
                 down = Downloader(stock, start, end)
                 down.download()
 
-    
+    # TREINA O MODELO
     def _train_model(self) -> None:
+
+        features = ['Close']
+
         hparams = Hparams(
-            input_size      = 5,
+            input_size      = len(features),
             hidden_size     = 50,
             num_layers      = 2,
             dropout         = 0.2,
@@ -31,9 +37,14 @@ class Pipeline:
             n_epochs        = 100,
             device          = 'cpu'
         )
-        features = ['Close','High','Low','Open','Volume']
+        
         trainner = Train(hparams, 65462, features)
         trainner.train()
 
 
-        
+    # CARREGA O MODELO E COLOCA EM PRODUÇÃO
+    def _deploy_model(self) -> None:
+        pass
+
+
+

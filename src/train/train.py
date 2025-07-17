@@ -197,18 +197,6 @@ class Train:
     
         self._load_data()
         self._create_sequences()
-        np.set_printoptions(
-            threshold=np.inf,  # Mostra todos os elementos
-            suppress=True,     # Suprime notação científica
-            precision=8,       # Número de casas decimais (ajuste conforme necessário)
-            linewidth=200      # Largura da linha (evita quebras indesejadas)
-        )
-        #with open('arq.txt', 'w') as file:
-        #    file.write(str(self._X))
-        #    file.write('\n===================================\n')
-        #    file.write(str(self._y))
-
-        return
         self._train_test_split(train_size=0.7)
         self._load_data_loader()
         self._train()
