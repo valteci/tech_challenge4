@@ -10,21 +10,20 @@ class Deploy:
     def __init__(self, hparams: Hparams):
         # Carrega o modelo
         self._haparams = hparams
-        #self._device = torch.device(hparams.device if torch.cuda.is_available() else 'cpu')
-        self._device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
         self._model = StockLSTM(hparams=hparams)
-        # self._model.load_state_dict(
-        #     torch.load('./train/best_model.pth'),
-        #     map_location=self._device
-        # )
 
-        self._model.load_state_dict(
-            torch.load(f'{Train.SAVING_WEIGHTS_PATH}/best_model.pth'),
-            map_location='cpu'
+        state_dict = torch.load(
+            f'{Train.SAVING_WEIGHTS_PATH}/best_model.pth',
+            map_location=hparams.device
         )
 
+        self._model.load_state_dict(state_dict)
+
+        self._model.to(hparams.device)
+
         self._model.eval()
+
 
     def predict(self, input_data: pd.DataFrame):
         closes = input_data['Close'].astype(float).values

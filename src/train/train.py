@@ -17,13 +17,8 @@ class Train:
     def __init__(
             self,
             hparams: Hparams,
-            seed: int,
-            features: list[str],
             data: list[pd.DataFrame] = None
         ):
-
-        if hparams.input_size != len(features):
-            raise ValueError('input_size deve ser igual ao número de features')
 
         self._hparams = hparams
         self._data = data
@@ -35,11 +30,9 @@ class Train:
         self._y_test = []
         self._train_loader: DataLoader = None
         self._test_loader: DataLoader = None
-        self._device = torch.device(hparams.device if torch.cuda.is_available() else 'cpu')
+        self._device = torch.device(hparams.device)
         self._model = StockLSTM(hparams).to(self._device)
         self._loss_function = nn.MSELoss()
-        self._seed = seed
-        self._features = features
 
         self._optimizer = optim.Adam(
             self._model.parameters(),
@@ -76,7 +69,7 @@ class Train:
 
         for df in self._data:
             # pega as colunas dinâmicas
-            data = df[self._features].values.astype(np.float32)  # [n_rows, input_size]
+            data = df[self._hparams.features].values.astype(np.float32)  # [n_rows, input_size]
             n_rows = data.shape[0]
             n_samples = n_rows - seq_len - fut + 1
             if n_samples <= 0:
@@ -189,15 +182,15 @@ class Train:
 
     def train(self):
 
-        torch.manual_seed(self._seed)
-        np.random.seed(self._seed)
+        torch.manual_seed(self._hparams.seed)
+        np.random.seed(self._hparams.seed)
 
         if torch.cuda.is_available(): 
-            torch.cuda.manual_seed_all(self._seed)
+            torch.cuda.manual_seed_all(self._hparams.seed)
     
         self._load_data()
         self._create_sequences()
-        self._train_test_split(train_size=0.7)
+        self._train_test_split(self._hparams.train_size)
         self._load_data_loader()
         self._train()
 

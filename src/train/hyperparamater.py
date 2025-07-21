@@ -1,7 +1,9 @@
+import torch
+
 class Hparams:
     def __init__(
         self,
-        input_size: int = 4,
+        features: list[str] = [],
         hidden_size: int = 50,
         num_layers: int = 2,
         dropout: float = 0.2,
@@ -12,8 +14,19 @@ class Hparams:
         n_epochs: int = 100,
         future_steps: int = 5,
         device: str = 'cuda',
+        seed: int = 42,
+        train_size: float = 0.7
     ):
-        self._input_size = input_size
+        if len(features) == 0:
+            raise ValueError('features não pode ser vazio!')
+        
+        if seed < 0:
+            raise ValueError('seed deve ser >= 0')
+        
+        if train_size <= 0:
+            raise ValueError('train_size deve ser > 0')
+
+        self._features = features
         self._hidden_size = hidden_size
         self._num_layers = num_layers
         self._dropout = dropout
@@ -24,17 +37,11 @@ class Hparams:
         self._n_epochs = n_epochs
         self._future_steps = future_steps
         self._device = device
+        self._seed = seed
+        self._train_size = train_size
 
-    # -------- input_size ----------
-    @property
-    def input_size(self) -> int:
-        return self._input_size
+        self._input_size = len(features)
 
-    @input_size.setter
-    def input_size(self, value: int) -> None:
-        if value <= 0:
-            raise ValueError("input_size deve ser > 0")
-        self._input_size = value
 
     # -------- hidden_size ----------
     @property
@@ -47,6 +54,7 @@ class Hparams:
             raise ValueError("hidden_size deve ser > 0")
         self._hidden_size = value
 
+
     # -------- num_layers ----------
     @property
     def num_layers(self) -> int:
@@ -57,6 +65,7 @@ class Hparams:
         if value <= 0:
             raise ValueError("num_layers deve ser > 0")
         self._num_layers = value
+
 
     # -------- dropout ----------
     @property
@@ -69,6 +78,7 @@ class Hparams:
             raise ValueError("dropout deve estar em [0, 1)")
         self._dropout = value
 
+
     # -------- sequence_length ----------
     @property
     def sequence_length(self) -> int:
@@ -79,6 +89,7 @@ class Hparams:
         if value <= 0:
             raise ValueError("sequence_length deve ser > 0")
         self._sequence_length = value
+
 
     # -------- batch_size ----------
     @property
@@ -91,6 +102,7 @@ class Hparams:
             raise ValueError("batch_size deve ser > 0")
         self._batch_size = value
 
+
     # -------- learning_rate ----------
     @property
     def learning_rate(self) -> float:
@@ -101,6 +113,7 @@ class Hparams:
         if value <= 0:
             raise ValueError("learning_rate deve ser > 0")
         self._learning_rate = value
+
 
     # -------- weight_decay ----------
     @property
@@ -113,6 +126,7 @@ class Hparams:
             raise ValueError("weight_decay não pode ser negativo")
         self._weight_decay = value
 
+
     # -------- n_epochs ----------
     @property
     def n_epochs(self) -> int:
@@ -124,17 +138,35 @@ class Hparams:
             raise ValueError("n_epochs deve ser > 0")
         self._n_epochs = value
 
+
     # -------- future_steps ----------
     @property
     def future_steps(self) -> int:
         return self._future_steps
     
     @future_steps.setter
-    def device(self, value: int) -> None:
+    def future_steps(self, value: int) -> None:
         if value < 1:
             raise ValueError('future_steps deve ser >= 1')
         
         self._future_steps = value
+
+
+    # -------- features ----------
+    @property
+    def features(self) -> list[str]:
+        """Getter method"""
+        return self._features
+    
+    @features.setter
+    def features(self, value: list[str]) -> None:
+        """Setter method"""
+        if len(value) == 0:
+            raise ValueError('features não pode ser vazio!')
+
+        self._features = value
+
+        self._input_size = len(value)
 
 
     # -------- device ----------
@@ -143,7 +175,56 @@ class Hparams:
         return self._device
 
     @device.setter
-    def device(self, value: str) -> None:
+    def device(self, value: str):
         if value not in {"cuda", "cpu", "mps"}:
-            raise ValueError("device deve ser 'cuda', 'cpu' ou 'mps'")
+            raise ValueError('Valor de device inválido!')
+        if value == "cuda" and not torch.cuda.is_available():
+            raise ValueError('cuda não está disponível!')
+        if value == "mps" and not (hasattr(torch.backends, "mps") 
+                                   and torch.backends.mps.is_available()):
+            raise ValueError('mps não está disponível!')
+        
         self._device = value
+
+
+    # -------- seed ----------
+    @property
+    def seed(self) -> int:
+        """Getter method"""
+        return self._seed
+    
+    @seed.setter
+    def seed(self, value: int) -> None:
+        """Setter method"""
+        if value < 0:
+            raise ValueError('seed deve ser >= 0')
+
+        self._seed = value
+
+
+    # -------- train_size ----------
+    @property
+    def train_size(self) -> float:
+        """Getter method"""
+        return self._train_size
+    
+    @train_size.setter
+    def train_size(self, value: float) -> None:
+        """Setter method"""
+        if value <= 0:
+            raise ValueError('train_size deve ser > 0')
+        
+        self._train_size = value
+
+
+    # -------- input_size ----------
+    @property
+    def input_size(self) -> int:
+        return self._input_size
+
+
+
+
+
+
+
