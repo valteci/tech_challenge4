@@ -2,6 +2,7 @@ from src.services.downloader import Downloader
 from src.train.train import Train
 from src.train.hyperparamater import Hparams
 from src.deploy.deploy import Deploy
+from src.deploy.fetch import Fetch
 
 class Pipeline:
     def __init__(self):
@@ -20,6 +21,8 @@ class Pipeline:
             seed            = 65424,
             train_size      = 0.7
         )
+
+        self._deploy: Deploy = None
 
     # FAZ DOWNLOAD DOS DADOS DE TREINO
     def _download_data(self, ticker: (str | list[str]), start: str, end: str) -> None:
@@ -42,8 +45,14 @@ class Pipeline:
 
     # CARREGA O MODELO E COLOCA EM PRODUÇÃO
     def deploy_model(self) -> None:
-        pass
-        #deploy = Deploy(self)
+        self._hparams.device = 'cpu'
+        self._deploy = Deploy(self._hparams)
 
+    
+    def predict(self) -> list[float]:
+        fetch = Fetch('ITUB4.SA', self._hparams.sequence_length, 2)
+        data = fetch.get_input()
+        predicted = list(self._deploy.predict(data))
+        return predicted
 
 

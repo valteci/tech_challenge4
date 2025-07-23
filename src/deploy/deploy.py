@@ -9,7 +9,7 @@ import numpy as np
 class Deploy:
     def __init__(self, hparams: Hparams):
         # Carrega o modelo
-        self._haparams = hparams
+        self._hparams = hparams
 
         self._model = StockLSTM(hparams=hparams)
 
@@ -25,30 +25,21 @@ class Deploy:
         self._model.eval()
 
 
-    def predict(self, input_data: pd.DataFrame):
-        closes = input_data['Close'].astype(float).values
-
-        seq_len = self._haparams.sequence_length
-        future_steps = self._haparams.future_steps
-
-        seq = closes.tolist()
-        preds = []
-
-        # predição autorregressiva
-        for _ in range(future_steps):
-            x = torch.tensor(seq, dtype=torch.float32).view(1, seq_len, 1).to(self.device)
-            with torch.no_grad():
-                y_hat = self._model(x)
-            
-            val = y_hat.cpu().item()
-            preds.append(val)
-
-            # desliza a janela
-            seq.append(val)
-            seq.pop(0)
-
-        return np.array(preds)
-
-
+    def predict(self, input_data: pd.DataFrame) -> np.ndarray:
+        closes      = input_data['Close'].astype(float).values
+        seq_len     = self._hparams.sequence_length
+        # 1) pega só os últimos seq_len valores
+        seq         = closes[-seq_len:]
+        # 2) monta o tensor (1, seq_len, 1)
+        x           = torch.tensor(seq, dtype=torch.float32) \
+                            .view(1, seq_len, 1) \
+                            .to(self._hparams.device)
+        # 3) inferência
+        self._model.to(self._hparams.device).eval()
+        with torch.no_grad():
+            y_hat = self._model(x)
+        # 4) extrai numpy (reshape em 1D)
+        preds = y_hat.cpu().numpy().reshape(-1)
+        return preds
 
 

@@ -3,10 +3,10 @@ import yfinance as yf
 import time
 
 class Fetch:
-    def __init__(self, stock_name: str, input_size: int, years_to_fetch: int):
+    def __init__(self, stock_name: str, sequence_length: int, years_to_fetch: int):
         self._stock_name = stock_name
         self._data: pd.DataFrame = None
-        self._input_size = input_size
+        self._sequence_length = sequence_length
         self._years_to_fetch = years_to_fetch
 
     def _fetch(self) -> None:
@@ -37,13 +37,13 @@ class Fetch:
         self._fetch() # busca os dados
 
         # verifica se tem dados suficientes para alimentar o modelo
-        if self._input_size > len(self._data):
+        if self._sequence_length > len(self._data):
             raise ValueError('Não há dados suficientes para prever o preço dessa ação')
 
-        return self._data.tail(self._input_size)
+        return self._data.tail(self._sequence_length)
 
 
-#fetch = Fetch(stock_name='WEGE3.SA', input_size=60, years_to_fetch=1)
+#fetch = Fetch(stock_name='WEGE3.SA', sequence_length=60, years_to_fetch=1)
 #df = fetch.get_input()
 
 

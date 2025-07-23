@@ -8,7 +8,6 @@ import numpy as np
 import pandas as pd
 import os
 
-
 class Train:
 
     DATA_PATH = './data'
