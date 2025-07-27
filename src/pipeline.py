@@ -8,13 +8,13 @@ class Pipeline:
     def __init__(self):
         self._hparams = Hparams(
             features        = ['Close'],
-            hidden_size     = 50,
+            hidden_size     = 40,
             num_layers      = 2,
-            dropout         = 0.2,
+            dropout         = 0.5,
             sequence_length = 60,
             future_steps    = 10,
             batch_size      = 32,
-            learning_rate   = 1e-3,
+            learning_rate   = 5e-4,
             weight_decay    = 1e-5,
             n_epochs        = 100,
             device          = 'cpu',    
