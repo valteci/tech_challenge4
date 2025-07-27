@@ -54,46 +54,51 @@ class Train:
             raise FileNotFoundError(f"Nenhum CSV encontrado em '{Train.DATA_PATH}'")
 
 
-    # 2) GERAR SEQUÊNCIAS DE X E Y (para múltiplos DataFrames)
-    def _create_sequences(self):
-        """
-        Para cada DataFrame em self._data:
-          1) extrai as colunas em self._features → array de shape [n_rows, input_size]
-          2) gera janelas de comprimento sequence_length para X e future_steps para y
-        """
-        seq_len = self._hparams.sequence_length
-        fut     = self._hparams.future_steps
+    # 2) GERA UMA LISTA DE JANELAS A PARTIR DE UM BLOCO CONTÍNUO
+    @staticmethod
+    def _make_windows(data: np.ndarray, seq_len: int, fut_len: int):
+        X, y = [], []
+        n_samples = len(data) - seq_len - fut_len + 1
+        for i in range(n_samples):
+            X.append(data[i : i + seq_len])                    # [seq_len, input_size]
+            y.append(data[i + seq_len : i + seq_len + fut_len, 0].flatten())
+        return X, y   
 
-        all_X, all_y = [], []
+
+
+    # 3) GERAR SEQUÊNCIAS JÁ SEPARADAS EM TREINO / VAL
+    def _create_sequences(self):
+        seq_len = self._hparams.sequence_length
+        fut_len = self._hparams.future_steps
+        train_sz = self._hparams.train_size
+
+        train_X, train_y, val_X, val_y = [], [], [], []
 
         for df in self._data:
-            # pega as colunas dinâmicas
-            data = df[self._hparams.features].values.astype(np.float32)  # [n_rows, input_size]
-            n_rows = data.shape[0]
-            n_samples = n_rows - seq_len - fut + 1
-            if n_samples <= 0:
-                continue  # pula séries muito curtas
+            # (opcional) normalização por ativo
+            values = df[self._hparams.features].values.astype(np.float32)
 
-            for i in range(n_samples):
-                # janela de entrada: [seq_len, input_size]
-                seq_x = data[i : i + seq_len]
-                # alvo multi‐step: flatten → [future_steps]
-                seq_y = data[i + seq_len : i + seq_len + fut, 0].flatten() \
-                        if self._hparams.future_steps == 1 else \
-                        data[i + seq_len : i + seq_len + fut, 0].flatten()
-                # se você quiser prever apenas a primeira feature (ex: Close) no y,
-                # use data[..., 0], ou ajuste para prever múltiplas features.
-                all_X.append(seq_x)
-                all_y.append(seq_y)
+            split = int(len(values) * train_sz)
+            train_block = values[:split]
+            val_block   = values[split:]
 
-        if not all_X:
-            raise ValueError("Nenhuma sequência foi gerada; verifique self._data e parâmetros.")
+            # gera janelas em cada bloco
+            X_t, y_t = self._make_windows(train_block, seq_len, fut_len)
+            X_v, y_v = self._make_windows(val_block,   seq_len, fut_len)
 
-        # empilha para formar [total_samples, seq_len, input_size] e [total_samples, future_steps]
-        self._X = np.stack(all_X)
-        self._y = np.stack(all_y)
+            train_X.extend(X_t); train_y.extend(y_t)
+            val_X.extend(X_v);   val_y.extend(y_v)
 
+        if not train_X or not val_X:
+            raise ValueError("Não foram geradas janelas; verifique dados e parâmetros.")
 
+        # converte para arrays
+        self._X_train = np.stack(train_X)     # [n_train, seq_len, input_size]
+        self._y_train = np.stack(train_y)     # [n_train, fut_len]
+        self._X_test  = np.stack(val_X)
+        self._y_test  = np.stack(val_y)
+
+    
     # 3) DIVISÃO EM TREINO E TESTE
     def _train_test_split(self, train_size: float):
 
@@ -190,7 +195,7 @@ class Train:
     
         self._load_data()
         self._create_sequences()
-        self._train_test_split(self._hparams.train_size)
+        #self._train_test_split(self._hparams.train_size)
         self._load_data_loader()
         self._train()
 

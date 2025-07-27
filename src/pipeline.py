@@ -12,13 +12,13 @@ class Pipeline:
             num_layers      = 2,
             dropout         = 0.2,
             sequence_length = 60,
-            future_steps    = 5,
+            future_steps    = 10,
             batch_size      = 32,
             learning_rate   = 1e-3,
             weight_decay    = 1e-5,
             n_epochs        = 100,
             device          = 'cpu',    
-            seed            = 65424,
+            seed            = 6544,
             train_size      = 0.7
         )
 

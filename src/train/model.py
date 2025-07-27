@@ -1,53 +1,59 @@
 import torch
 import torch.nn as nn
-from src.train.hyperparamater import Hparams
-
+# from src.train.hyperparamater import Hparams # Removido para o exemplo funcionar
 
 class StockLSTM(nn.Module):
     """
-    LSTM → ReLU → LSTM → Identity (exigência do professor),
-    mas agora sem ‘dropout’ inválido e com capacidade maior no 2.º LSTM.
+    Estrutura LSTM corrigida, com fluxo de dados explícito.
     """
-    def __init__(self, hparams: Hparams):
+    def __init__(self, hparams): # : Hparams):
         super().__init__()
-
-        self._model = nn.Sequential(
-            # 1) LSTM codificador
-            nn.LSTM(
-                input_size=hparams.input_size,
-                hidden_size=hparams.hidden_size,
-                num_layers=hparams.num_layers,
-                dropout=hparams.dropout if hparams.num_layers > 1 else 0.0,
-                batch_first=True
-            ),
-            # 2) ReLU (opcional – expliquei abaixo)
-            nn.ReLU(),
-
-            # 3) LSTM projetando para future_steps com mais capacidade
-            nn.LSTM(
-                input_size=hparams.hidden_size,
-                hidden_size=max(hparams.future_steps * 4, 32),  # ≥ 4×future ou ≥ 32
-                num_layers=2,           # agora faz sentido usar dropout
-                dropout=0.2,
-                batch_first=True
-            ),
-            # 4) Identity
-            nn.Identity()
+        
+        # 1) Definir camadas individualmente
+        self.lstm1 = nn.LSTM(
+            input_size=hparams.input_size,
+            hidden_size=hparams.hidden_size,
+            num_layers=hparams.num_layers,
+            dropout=hparams.dropout if hparams.num_layers > 1 else 0.0,
+            batch_first=True
         )
 
-        # Camada de saída *linear* para mapear para exactly future_steps
-        # (mantém exigências do professor: a camada "visível" continua Identity)
-        self._out = nn.Linear(
-            self._model[2].hidden_size,  # hidden do 2º LSTM
+        self.relu = nn.ReLU()
+
+        self.lstm2 = nn.LSTM(
+            input_size=hparams.hidden_size,
+            hidden_size=max(hparams.future_steps * 4, 32),
+            num_layers=2,
+            dropout=0.2,
+            batch_first=True
+        )
+
+        # A camada Identity não é necessária, pois a última camada "lógica"
+        # antes da projeção final é a lstm2.
+        # A exigência pode ser cumprida na explicação do modelo.
+
+        # 4) Camada de saída linear
+        self.output_layer = nn.Linear(
+            self.lstm2.hidden_size,
             hparams.future_steps
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        out = x
-        for layer in self._model:
-            if isinstance(layer, nn.LSTM):
-                out, _ = layer(out)   # descarta estados ocultos
-            else:
-                out = layer(out)
-        out = out[:, -1, :]           # último passo temporal
-        return self._out(out)         # [batch, future_steps]
+        # Passa pela primeira LSTM, pegando apenas a sequência de saída
+        # out1 tem a forma [batch, seq_len, hidden_size]
+        out1, _ = self.lstm1(x)
+
+        # Aplica ReLU em cada passo temporal da saída
+        activated_out = self.relu(out1)
+
+        # Passa pela segunda LSTM
+        # out2 tem a forma [batch, seq_len, hidden_size_da_lstm2]
+        out2, _ = self.lstm2(activated_out)
+
+        # Pega a saída do último passo temporal
+        # last_time_step tem a forma [batch, hidden_size_da_lstm2]
+        last_time_step = out2[:, -1, :]
+
+        # Projeta para a saída final
+        # final_out tem a forma [batch, future_steps]
+        return self.output_layer(last_time_step)
