@@ -93,6 +93,7 @@ class Train:
         self._X = np.stack(all_X)
         self._y = np.stack(all_y)
 
+
     # 3) DIVISÃO EM TREINO E TESTE
     def _train_test_split(self, train_size: float):
 

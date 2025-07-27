@@ -17,7 +17,7 @@ class Pipeline:
             learning_rate   = 1e-3,
             weight_decay    = 1e-5,
             n_epochs        = 100,
-            device          = 'cuda',
+            device          = 'cpu',    
             seed            = 65424,
             train_size      = 0.7
         )

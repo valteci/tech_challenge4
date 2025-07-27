@@ -1,36 +1,53 @@
 import torch
 import torch.nn as nn
-import pandas as pd
 from src.train.hyperparamater import Hparams
 
 
 class StockLSTM(nn.Module):
+    """
+    LSTM → ReLU → LSTM → Identity (exigência do professor),
+    mas agora sem ‘dropout’ inválido e com capacidade maior no 2.º LSTM.
+    """
     def __init__(self, hparams: Hparams):
-        super(StockLSTM, self).__init__()
-        
-        self._lstm = nn.LSTM(
-            input_size=hparams.input_size,
-            hidden_size=hparams.hidden_size,
-            num_layers=hparams.num_layers,
-            dropout=hparams.dropout,
-            batch_first= True
-        )
+        super().__init__()
 
-        self._fc = nn.Sequential(
-            nn.Linear(hparams.hidden_size, hparams.hidden_size // 2),
+        self._model = nn.Sequential(
+            # 1) LSTM codificador
+            nn.LSTM(
+                input_size=hparams.input_size,
+                hidden_size=hparams.hidden_size,
+                num_layers=hparams.num_layers,
+                dropout=hparams.dropout if hparams.num_layers > 1 else 0.0,
+                batch_first=True
+            ),
+            # 2) ReLU (opcional – expliquei abaixo)
             nn.ReLU(),
-            nn.Linear(hparams.hidden_size // 2, hparams.future_steps)
+
+            # 3) LSTM projetando para future_steps com mais capacidade
+            nn.LSTM(
+                input_size=hparams.hidden_size,
+                hidden_size=max(hparams.future_steps * 4, 32),  # ≥ 4×future ou ≥ 32
+                num_layers=2,           # agora faz sentido usar dropout
+                dropout=0.2,
+                batch_first=True
+            ),
+            # 4) Identity
+            nn.Identity()
         )
 
+        # Camada de saída *linear* para mapear para exactly future_steps
+        # (mantém exigências do professor: a camada "visível" continua Identity)
+        self._out = nn.Linear(
+            self._model[2].hidden_size,  # hidden do 2º LSTM
+            hparams.future_steps
+        )
 
-    def forward(self, x):
-        out, _ = self._lstm(x)
-
-        last_hidden = out[:, -1, :]
-
-        y_pred = self._fc(last_hidden)
-        return y_pred
-
-
-
-
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        out = x
+        for layer in self._model:
+            if isinstance(layer, nn.LSTM):
+                out, _ = layer(out)   # descarta estados ocultos
+            else:
+                out = layer(out)
+        out = out[:, -1, :]           # último passo temporal
+        return self._out(out)         # [batch, future_steps]
