@@ -175,11 +175,12 @@ class Train:
             va_loss = self._eval_epoch()
             if va_loss < best_val:
                 best_val = va_loss
-                torch.save(
-                    self._model.state_dict(),
-                    f'{Train.SAVING_WEIGHTS_PATH}/best_model.pth'
-                )
                 
+            torch.save(
+                self._model.state_dict(),
+                f'{Train.SAVING_WEIGHTS_PATH}/best_model.pth'
+            )
+            
             print(f"Epoch {epoch:03d} — Train Loss: {tr_loss:.6f} | Val Loss: {va_loss:.6f}")
 
         print("Treino concluído. Melhor Val Loss:", best_val)

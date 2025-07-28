@@ -28,8 +28,10 @@ class Deploy:
     def predict(self, input_data: pd.DataFrame) -> np.ndarray:
         closes      = input_data['Close'].astype(float).values
         seq_len     = self._hparams.sequence_length
+
         # 1) pega só os últimos seq_len valores
         seq         = closes[-seq_len:]
+
         # 2) monta o tensor (1, seq_len, 1)
         x           = torch.tensor(seq, dtype=torch.float32) \
                             .view(1, seq_len, 1) \

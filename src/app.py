@@ -4,12 +4,6 @@ from src.pipeline import Pipeline
 app = Flask(__name__)
 pipeline = Pipeline()
 
-# retorna a página home
-@app.route('/home')
-def home():
-    pass
-
-
 #treina o modelo e faz deploy com os novos pesos
 @app.route('/train', methods=['POST'])
 def train():
@@ -37,6 +31,8 @@ def train():
     pipeline._download_data([stock], inicio, fim)
     pipeline._train_model()
     pipeline.deploy_model()
+
+    pipeline.stock = stock
     
     return jsonify(
         {
@@ -45,11 +41,31 @@ def train():
 
 
 # prevê o preço da ação
-@app.route('/predict')
+@app.route('/predict', methods=['POST'])
 def predict():
+
+    data = request.get_json(silent=True)
+
+    if not data:
+        return jsonify({"error": "Voce precisa mandar um json valido."}), 400
+
+    if 'stock' not in data:
+        return jsonify({"error": "Campo 'stock' obrigatorio no corpo JSON."}), 400
+    
+    stock:  str = data['stock']
+    
+    pipeline.stock = stock
+
+
+    if pipeline._deploy is None:
+        pipeline.deploy_model()
+
     result = pipeline.predict()
     response = str(result)
-    return f'<p>Preço das ações: {response}</p>'
+    return jsonify(
+        {
+            "preco": response
+        }), 200
 
 
 # pega estatísticas do modelo

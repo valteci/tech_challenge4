@@ -17,7 +17,7 @@ class StockLSTM(nn.Module):
             batch_first=True
         )
 
-        self.dp  = nn.Dropout(0.4)
+        self.dp  = nn.Dropout(0.3)
 
         self.lstm2 = nn.LSTM(
             input_size=hparams.hidden_size,
@@ -26,7 +26,7 @@ class StockLSTM(nn.Module):
             batch_first=True
         )
 
-        self.dp_out = nn.Dropout(0.2)
+        self.dp_out = nn.Dropout(0.1)
 
         # 4) Camada de saída linear
         self.output_layer = nn.Linear(

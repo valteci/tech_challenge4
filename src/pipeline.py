@@ -5,7 +5,7 @@ from src.deploy.deploy import Deploy
 from src.deploy.fetch import Fetch
 
 class Pipeline:
-    def __init__(self):
+    def __init__(self, stock=''):
         self._hparams = Hparams(
             features        = ['Close'],
             hidden_size     = 40,
@@ -16,13 +16,14 @@ class Pipeline:
             batch_size      = 32,
             learning_rate   = 5e-4,
             weight_decay    = 1e-5,
-            n_epochs        = 100,
+            n_epochs        = 150,
             device          = 'cpu',    
             seed            = 6544,
             train_size      = 0.7
         )
 
         self._deploy: Deploy = None
+        self.stock: str = stock
 
     # FAZ DOWNLOAD DOS DADOS DE TREINO
     def _download_data(self, ticker: (str | list[str]), start: str, end: str) -> None:
@@ -50,9 +51,12 @@ class Pipeline:
 
     
     def predict(self) -> list[float]:
-        fetch = Fetch('ITUB4.SA', self._hparams.sequence_length, 2)
+        fetch = Fetch(self.stock, self._hparams.sequence_length, 2)
         data = fetch.get_input()
+        print(data)
+        #print(data) # certo!
         predicted = list(self._deploy.predict(data))
+        predicted = [round(value, 2) for value in predicted]
         return predicted
 
 
