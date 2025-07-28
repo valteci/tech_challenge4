@@ -76,8 +76,10 @@ class Pipeline:
 
     # PEGA ESTATÍSTICAS DE TODOS OS EXPERIMENTOS
     def get_statistics(self):
-        # 1) Pegar todos os experimentos (ativos + arquivados)
-        exps = self._client.search_experiments(view_type=ViewType.ALL)
+        # 1) Pegar os experimentos (ativos + arquivados)
+        exps = self._client.search_experiments(
+            view_type=ViewType.ALL
+        )
         
         experiments_data = []
         for exp in exps:
