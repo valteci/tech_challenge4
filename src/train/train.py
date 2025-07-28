@@ -68,7 +68,23 @@ class Train:
             y.append(data[i + seq_len : i + seq_len + fut_len, 0].flatten())
         return X, y   
 
-
+    # 8) MÉTODO PARA AVALIAÇÃO FINAL
+    def _evaluate(self):
+        self._model.eval()
+        all_preds = []
+        all_targets = []
+        with torch.no_grad():
+            for xb, yb in self._test_loader:
+                xb, yb = xb.to(self._device), yb.to(self._device)
+                preds = self._model(xb)
+                all_preds.append(preds)
+                all_targets.append(yb)
+        
+        # Concatena todas as previsões e targets
+        all_preds = torch.cat(all_preds, dim=0)
+        all_targets = torch.cat(all_targets, dim=0)
+        
+        return all_preds.cpu().numpy(), all_targets.cpu().numpy()
 
     # 3) GERAR SEQUÊNCIAS JÁ SEPARADAS EM TREINO / VAL
     def _create_sequences(self):
@@ -151,7 +167,7 @@ class Train:
             xb, yb = xb.to(self._device), yb.to(self._device)
             self._optimizer.zero_grad()
             preds = self._model(xb)
-            loss  = self._loss_function(preds, yb)        # yb também [batch, future_steps]
+            loss  = self._loss_function(preds, yb) # yb também [batch, future_steps]
             loss.backward()
             self._optimizer.step()
             total_loss += loss.item() * xb.size(0)
@@ -171,7 +187,7 @@ class Train:
         return total_loss / len(self._test_loader.dataset)
 
 
-    # 7) TRAIN
+    # 7) TRAIN (ATUALIZADO)
     def _train(self):
         history = {"train_loss": [], "val_loss": []}
         best_val = float('inf')
@@ -180,11 +196,11 @@ class Train:
             va_loss = self._eval_epoch()
             if va_loss < best_val:
                 best_val = va_loss
-
-            torch.save(
-                self._model.state_dict(),
-                f'{Train.SAVING_WEIGHTS_PATH}/best_model.pth'
-            )
+                # Salvar apenas o melhor modelo
+                torch.save(
+                    self._model.state_dict(),
+                    f'{Train.SAVING_WEIGHTS_PATH}/best_model.pth'
+                )
 
             mlflow.log_metric("train_loss", tr_loss, step=epoch)
             mlflow.log_metric("val_loss",   va_loss,   step=epoch)
@@ -193,14 +209,61 @@ class Train:
         
             print(f"Epoch {epoch:03d} — Train Loss: {tr_loss:.6f} | Val Loss: {va_loss:.6f}")
 
+        # ================================================================
+        # AVALIAÇÃO FINAL COM MELHOR MODELO
+        # ================================================================
+        
+        # Carregar o melhor modelo
+        self._model.load_state_dict(torch.load(f'{Train.SAVING_WEIGHTS_PATH}/best_model.pth'))
+        
+        # Obter previsões finais
+        preds, targets = self._evaluate()
+        
+        # Calcular RMSE e MAPE (considerando todos os passos de previsão)
+        fut_len = self._hparams.future_steps
+        
+        # 1. RMSE por passo de tempo
+        rmse_per_step = []
+        for step in range(fut_len):
+            rmse = np.sqrt(mean_squared_error(
+                targets[:, step], 
+                preds[:, step]
+            ))
+            rmse_per_step.append(rmse)
+            mlflow.log_metric(f"rmse_step_{step+1}", rmse)
+        
+        # RMSE médio (todos os passos)
+        final_rmse = np.mean(rmse_per_step)
+        
+        # 2. MAPE por passo de tempo
+        mape_per_step = []
+        epsilon = 1e-8  # evitar divisão por zero
+        for step in range(fut_len):
+            # Calcular MAPE com proteção contra valores zero
+            ape = np.abs((targets[:, step] - preds[:, step]) / 
+                        (np.abs(targets[:, step]) + epsilon))
+            mape = np.mean(ape) * 100  # em percentual
+            mape_per_step.append(mape)
+            mlflow.log_metric(f"mape_step_{step+1}", mape)
+        
+        # MAPE médio (todos os passos)
+        final_mape = np.mean(mape_per_step)
 
-        final_rmse = 0.0
-        final_mape = 0.0
-
+        # ================================================================
+        # LOG DAS MÉTRICAS FINAIS
+        # ================================================================
         mlflow.log_metric("final_rmse", final_rmse)
         mlflow.log_metric("final_mape", final_mape)
-
+        
+        # Log adicional das métricas de perda
+        mlflow.log_metric("history_train_loss", np.mean(history["train_loss"]))
+        mlflow.log_metric("history_val_loss", np.mean(history["val_loss"]))
         mlflow.log_metric("best_val_loss", best_val)
+        
+        print("\n" + "="*50)
+        print(f"Final RMSE: {final_rmse:.4f}")
+        print(f"Final MAPE: {final_mape:.2f}%")
+        print("="*50)
         print("Treino concluído. Melhor Val Loss:", best_val)
 
 
