@@ -9,6 +9,7 @@ from mlflow.entities import ViewType
 
 class Pipeline:
     def __init__(self, stock=''):
+        # Inicia Hiperparâmetros
         self._hparams = Hparams(
             features        = ['Close'],
             hidden_size     = 40,
@@ -26,21 +27,27 @@ class Pipeline:
         )
 
         self._deploy: Deploy = None
-        self.stock: str = stock
+        self.stock  : str = stock # nome da ação
         self._client = MlflowClient()
 
+        # seta a pasta para o mlflow
         mlflow.set_tracking_uri("file:///app/statistics")
         
 
     # FAZ DOWNLOAD DOS DADOS DE TREINO
-    def _download_data(self, ticker: (str | list[str]), start: str, end: str) -> None:
+    def _download_data(
+            self,
+            ticker: str | list[str],
+            start: str, end: str,
+    ) -> None:
 
-        Downloader._remove_files() # Remove os arquivos da pasta de dados
+        # Exclui todos os arquivos da pasta ./data
+        Downloader._remove_files() 
 
-        if isinstance(ticker, str):
+        if isinstance(ticker, str): # Apenas 1 ação
             down = Downloader(ticker, start, end)
             down.download()
-        elif isinstance(ticker, list):
+        elif isinstance(ticker, list): # Várias ações
             for stock in ticker:
                 down = Downloader(stock, start, end)
                 down.download()
