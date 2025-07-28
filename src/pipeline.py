@@ -11,7 +11,7 @@ class Pipeline:
             hidden_size     = 40,
             num_layers      = 2,
             dropout         = 0.5,
-            sequence_length = 60,
+            sequence_length = 20,
             future_steps    = 10,
             batch_size      = 32,
             learning_rate   = 5e-4,

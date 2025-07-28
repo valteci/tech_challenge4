@@ -1,10 +1,10 @@
 import torch
 import torch.nn as nn
-from src.train.hyperparamater import Hparams # Removido para o exemplo funcionar
+from src.train.hyperparamater import Hparams
 
 class StockLSTM(nn.Module):
     """
-    Estrutura LSTM corrigida, com fluxo de dados explícito.
+    Estrutura LSTM, com fluxo de dados explícito.
     """
     def __init__(self, hparams: Hparams): # : Hparams):
         super().__init__()
@@ -14,23 +14,19 @@ class StockLSTM(nn.Module):
             input_size=hparams.input_size,
             hidden_size=hparams.hidden_size,
             num_layers=1,
-            #dropout=hparams.dropout if hparams.num_layers > 1 else 0.0,
             batch_first=True
         )
 
-        self.relu = nn.ReLU()
+        self.dp  = nn.Dropout(0.4)
 
         self.lstm2 = nn.LSTM(
             input_size=hparams.hidden_size,
             hidden_size=max(hparams.future_steps * 4, 32),
             num_layers=1,
-            #dropout=0.5,
             batch_first=True
         )
 
-        # A camada Identity não é necessária, pois a última camada "lógica"
-        # antes da projeção final é a lstm2.
-        # A exigência pode ser cumprida na explicação do modelo.
+        self.dp_out = nn.Dropout(0.2)
 
         # 4) Camada de saída linear
         self.output_layer = nn.Linear(
@@ -43,8 +39,7 @@ class StockLSTM(nn.Module):
         # out1 tem a forma [batch, seq_len, hidden_size]
         out1, _ = self.lstm1(x)
 
-        # Aplica ReLU em cada passo temporal da saída
-        #activated_out = self.relu(out1)
+        out1 = self.dp(out1)
 
         # Passa pela segunda LSTM
         # out2 tem a forma [batch, seq_len, hidden_size_da_lstm2]
@@ -53,6 +48,8 @@ class StockLSTM(nn.Module):
         # Pega a saída do último passo temporal
         # last_time_step tem a forma [batch, hidden_size_da_lstm2]
         last_time_step = out2[:, -1, :]
+
+        last_time_step = self.dp_out(last_time_step)
 
         # Projeta para a saída final
         # final_out tem a forma [batch, future_steps]
