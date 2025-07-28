@@ -14,6 +14,7 @@ docker run \
     -v ./src:/app/src \
     -v ./data:/app/data \
     -v ./saved_weights:/app/saved_weights \
+    -v ./statistics:/app/statistics \
     tech_challenge
 ```
 

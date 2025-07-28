@@ -92,3 +92,7 @@ data/
 
 # Dados csv
 *.csv
+
+statistics/*
+!statistics/.keep
+

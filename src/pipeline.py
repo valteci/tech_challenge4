@@ -3,6 +3,7 @@ from src.train.train import Train
 from src.train.hyperparamater import Hparams
 from src.deploy.deploy import Deploy
 from src.deploy.fetch import Fetch
+import mlflow
 
 class Pipeline:
     def __init__(self, stock=''):
@@ -25,6 +26,10 @@ class Pipeline:
         self._deploy: Deploy = None
         self.stock: str = stock
 
+        mlflow.set_tracking_uri("file:///app/statistics")
+        #mlflow.set_experiment("Deploy")
+
+
     # FAZ DOWNLOAD DOS DADOS DE TREINO
     def _download_data(self, ticker: (str | list[str]), start: str, end: str) -> None:
 
@@ -37,6 +42,7 @@ class Pipeline:
             for stock in ticker:
                 down = Downloader(stock, start, end)
                 down.download()
+
 
     # TREINA O MODELO
     def _train_model(self) -> None:
@@ -53,10 +59,12 @@ class Pipeline:
     def predict(self) -> list[float]:
         fetch = Fetch(self.stock, self._hparams.sequence_length, 2)
         data = fetch.get_input()
-        print(data)
-        #print(data) # certo!
         predicted = list(self._deploy.predict(data))
         predicted = [round(value, 2) for value in predicted]
         return predicted
+
+
+    def get_statistics(self):
+        pass
 
 

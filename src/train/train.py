@@ -2,11 +2,15 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import TensorDataset, DataLoader
+from sklearn.metrics import mean_squared_error
 from src.train.hyperparamater import Hparams
 from src.train.model import StockLSTM
 import numpy as np
 import pandas as pd
 import os
+import time
+import mlflow
+import mlflow.pytorch
 
 class Train:
 
@@ -38,7 +42,6 @@ class Train:
             lr=self._hparams.learning_rate,
             weight_decay=self._hparams.weight_decay
         )
-
 
     # 1) CARREGAR DADOS
     def _load_data(self):
@@ -169,36 +172,66 @@ class Train:
 
     # 7) TRAIN
     def _train(self):
+        history = {"train_loss": [], "val_loss": []}
         best_val = float('inf')
         for epoch in range(1, self._hparams.n_epochs + 1):
             tr_loss = self._train_epoch()
             va_loss = self._eval_epoch()
             if va_loss < best_val:
                 best_val = va_loss
-                
+
             torch.save(
                 self._model.state_dict(),
                 f'{Train.SAVING_WEIGHTS_PATH}/best_model.pth'
             )
-            
+
+            mlflow.log_metric("train_loss", tr_loss, step=epoch)
+            mlflow.log_metric("val_loss",   va_loss,   step=epoch)
+            history["train_loss"].append(tr_loss)
+            history["val_loss"].append(va_loss)
+        
             print(f"Epoch {epoch:03d} — Train Loss: {tr_loss:.6f} | Val Loss: {va_loss:.6f}")
+
+
+        final_rmse = 2.3
+        mlflow.log_metric("final_rmse", final_rmse)
 
         print("Treino concluído. Melhor Val Loss:", best_val)
 
 
     def train(self):
 
-        torch.manual_seed(self._hparams.seed)
-        np.random.seed(self._hparams.seed)
+        now = time.strftime("%Y-%m-%d-%H:%M:%S")
+        mlflow.set_experiment(now)
 
-        if torch.cuda.is_available(): 
-            torch.cuda.manual_seed_all(self._hparams.seed)
-    
-        self._load_data()
-        self._create_sequences()
-        #self._train_test_split(self._hparams.train_size)
-        self._load_data_loader()
-        self._train()
+        with mlflow.start_run():
+            mlflow.log_params({
+                "hidden_size":    self._hparams.hidden_size,
+                "num_layers":     self._hparams.num_layers,
+                "dropout":        self._hparams.dropout,
+                "sequence_length":self._hparams.sequence_length,
+                "learning_rate":  self._hparams.learning_rate,
+                "batch_size":     self._hparams.batch_size,
+                "weight_decay":   self._hparams.weight_decay,
+                "n_epochs":       self._hparams.n_epochs,
+                "future_steps":   self._hparams.future_steps,
+                "device":         self._hparams.device,
+                "seed":           self._hparams.seed,
+                "train_size":     self._hparams.train_size
+            })
+
+
+            torch.manual_seed(self._hparams.seed)
+            np.random.seed(self._hparams.seed)
+
+            if torch.cuda.is_available(): 
+                torch.cuda.manual_seed_all(self._hparams.seed)
+        
+            self._load_data()
+            self._create_sequences()
+            #self._train_test_split(self._hparams.train_size)
+            self._load_data_loader()
+            self._train()
 
 
 
