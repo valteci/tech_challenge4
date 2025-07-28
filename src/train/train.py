@@ -10,7 +10,6 @@ import pandas as pd
 import os
 import time
 import mlflow
-import mlflow.pytorch
 
 class Train:
 
@@ -19,23 +18,24 @@ class Train:
 
     def __init__(
             self,
-            hparams: Hparams,
-            data: list[pd.DataFrame] = None
-        ):
+            hparams : Hparams,
+            data    : list[pd.DataFrame] = None
+    ):
 
         self._hparams = hparams
-        self._data = data
-        self._X = []
-        self._y = []
-        self._X_train = []
-        self._X_test = []
-        self._y_train = []
-        self._y_test = []
+        self._data          = data
+        self._X             = []
+        self._y             = []
+        self._X_train       = []
+        self._X_test        = []
+        self._y_train       = []
+        self._y_test        = []
+        self._device        = torch.device(hparams.device)
+        self._model         = StockLSTM(hparams).to(self._device)
+        self._loss_function = nn.MSELoss()
+        
         self._train_loader: DataLoader = None
         self._test_loader: DataLoader = None
-        self._device = torch.device(hparams.device)
-        self._model = StockLSTM(hparams).to(self._device)
-        self._loss_function = nn.MSELoss()
         
 
         self._optimizer = optim.Adam(
@@ -55,7 +55,9 @@ class Train:
                     df = df.sort_values('Date').reset_index(drop=True)
                     self._data.append(df)
         if not self._data:
-            raise FileNotFoundError(f"Nenhum CSV encontrado em '{Train.DATA_PATH}'")
+            raise FileNotFoundError(
+                f"Nenhum CSV encontrado em '{Train.DATA_PATH}'"
+            )
 
 
     # 2) GERA UMA LISTA DE JANELAS A PARTIR DE UM BLOCO CONTÍNUO
@@ -64,33 +66,37 @@ class Train:
         X, y = [], []
         n_samples = len(data) - seq_len - fut_len + 1
         for i in range(n_samples):
-            X.append(data[i : i + seq_len])                    # [seq_len, input_size]
-            y.append(data[i + seq_len : i + seq_len + fut_len, 0].flatten())
+            X.append(data[i : i + seq_len]) # [seq_len, input_size]
+            y.append(
+                data[i + seq_len : i + seq_len + fut_len, 0].flatten()
+            )
+        
         return X, y   
 
     # 8) MÉTODO PARA AVALIAÇÃO FINAL
     def _evaluate(self):
         self._model.eval()
-        all_preds = []
+        all_preds   = []
         all_targets = []
+
         with torch.no_grad():
             for xb, yb in self._test_loader:
-                xb, yb = xb.to(self._device), yb.to(self._device)
-                preds = self._model(xb)
+                xb, yb  = xb.to(self._device), yb.to(self._device)
+                preds   = self._model(xb)
                 all_preds.append(preds)
                 all_targets.append(yb)
         
         # Concatena todas as previsões e targets
-        all_preds = torch.cat(all_preds, dim=0)
-        all_targets = torch.cat(all_targets, dim=0)
+        all_preds   = torch.cat(all_preds,      dim=0)
+        all_targets = torch.cat(all_targets,    dim=0)
         
         return all_preds.cpu().numpy(), all_targets.cpu().numpy()
 
     # 3) GERAR SEQUÊNCIAS JÁ SEPARADAS EM TREINO / VAL
     def _create_sequences(self):
-        seq_len = self._hparams.sequence_length
-        fut_len = self._hparams.future_steps
-        train_sz = self._hparams.train_size
+        seq_len     = self._hparams.sequence_length
+        fut_len     = self._hparams.future_steps
+        train_sz    = self._hparams.train_size
 
         train_X, train_y, val_X, val_y = [], [], [], []
 
@@ -98,7 +104,7 @@ class Train:
             # (opcional) normalização por ativo
             values = df[self._hparams.features].values.astype(np.float32)
 
-            split = int(len(values) * train_sz)
+            split       = int(len(values) * train_sz)
             train_block = values[:split]
             val_block   = values[split:]
 
@@ -110,11 +116,13 @@ class Train:
             val_X.extend(X_v);   val_y.extend(y_v)
 
         if not train_X or not val_X:
-            raise ValueError("Não foram geradas janelas; verifique dados e parâmetros.")
+            raise ValueError(
+                "Não foram geradas janelas; verifique dados e parâmetros."
+            )
 
         # converte para arrays
-        self._X_train = np.stack(train_X)     # [n_train, seq_len, input_size]
-        self._y_train = np.stack(train_y)     # [n_train, fut_len]
+        self._X_train = np.stack(train_X) # [n_train, seq_len, input_size]
+        self._y_train = np.stack(train_y) # [n_train, fut_len]
         self._X_test  = np.stack(val_X)
         self._y_test  = np.stack(val_y)
 
@@ -167,7 +175,9 @@ class Train:
             xb, yb = xb.to(self._device), yb.to(self._device)
             self._optimizer.zero_grad()
             preds = self._model(xb)
-            loss  = self._loss_function(preds, yb) # yb também [batch, future_steps]
+
+            # yb também [batch, future_steps]
+            loss  = self._loss_function(preds, yb)
             loss.backward()
             self._optimizer.step()
             total_loss += loss.item() * xb.size(0)
@@ -180,10 +190,11 @@ class Train:
         total_loss = 0.0
         with torch.no_grad():
             for xb, yb in self._test_loader:
-                xb, yb = xb.to(self._device), yb.to(self._device)
-                preds = self._model(xb)
-                loss  = self._loss_function(preds, yb)
+                xb, yb      = xb.to(self._device), yb.to(self._device)
+                preds       = self._model(xb)
+                loss        = self._loss_function(preds, yb)
                 total_loss += loss.item() * xb.size(0)
+
         return total_loss / len(self._test_loader.dataset)
 
 
@@ -202,8 +213,9 @@ class Train:
                     f'{Train.SAVING_WEIGHTS_PATH}/best_model.pth'
                 )
 
-            mlflow.log_metric("train_loss", tr_loss, step=epoch)
-            mlflow.log_metric("val_loss",   va_loss,   step=epoch)
+            mlflow.log_metric("train_loss", tr_loss,    step=epoch)
+            mlflow.log_metric("val_loss",   va_loss,    step=epoch)
+
             history["train_loss"].append(tr_loss)
             history["val_loss"].append(va_loss)
         
@@ -254,11 +266,18 @@ class Train:
         # ================================================================
         mlflow.log_metric("final_rmse", final_rmse)
         mlflow.log_metric("final_mape", final_mape)
+        mlflow.log_metric("best_val_loss",      best_val)
         
         # Log adicional das métricas de perda
-        mlflow.log_metric("history_train_loss", np.mean(history["train_loss"]))
-        mlflow.log_metric("history_val_loss", np.mean(history["val_loss"]))
-        mlflow.log_metric("best_val_loss", best_val)
+        mlflow.log_metric(
+            "history_train_loss",
+            np.mean(history["train_loss"])
+        )
+        
+        mlflow.log_metric(
+            "history_val_loss",
+            np.mean(history["val_loss"])
+        )
         
         print("\n" + "="*50)
         print(f"Final RMSE: {final_rmse:.4f}")
@@ -292,7 +311,6 @@ class Train:
                 "train_size":     self._hparams.train_size
             })
 
-
             torch.manual_seed(self._hparams.seed)
             np.random.seed(self._hparams.seed)
 
@@ -301,7 +319,6 @@ class Train:
         
             self._load_data()
             self._create_sequences()
-            #self._train_test_split(self._hparams.train_size)
             self._load_data_loader()
             self._train()
 

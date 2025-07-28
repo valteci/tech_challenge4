@@ -37,8 +37,9 @@ class Pipeline:
     # FAZ DOWNLOAD DOS DADOS DE TREINO
     def _download_data(
             self,
-            ticker: str | list[str],
-            start: str, end: str,
+            ticker  : str | list[str],
+            start   : str,
+            end     : str,
     ) -> None:
 
         # Exclui todos os arquivos da pasta ./data
@@ -61,16 +62,22 @@ class Pipeline:
 
     # CARREGA O MODELO E COLOCA EM PRODUÇÃO
     def deploy_model(self) -> None:
-        self._hparams.device = 'cpu'
-        self._deploy = Deploy(self._hparams)
+        self._hparams.device    = 'cpu'
+        self._deploy            = Deploy(self._hparams)
 
     
     # FAZ PREDICT
     def predict(self) -> list[float]:
-        fetch = Fetch(self.stock, self._hparams.sequence_length, 2)
-        data = fetch.get_input()
-        predicted = list(self._deploy.predict(data))
-        predicted = [round(value, 2) for value in predicted]
+        fetch = Fetch(
+            self.stock,
+            self._hparams.sequence_length,
+            2
+        )
+
+        data        = fetch.get_input()
+        predicted   = list(self._deploy.predict(data))
+        predicted   = [round(value, 2) for value in predicted]
+        
         return predicted
 
 
