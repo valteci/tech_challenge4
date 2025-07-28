@@ -4,6 +4,8 @@ from src.train.hyperparamater import Hparams
 from src.deploy.deploy import Deploy
 from src.deploy.fetch import Fetch
 import mlflow
+from mlflow.tracking import MlflowClient
+from mlflow.entities import ViewType
 
 class Pipeline:
     def __init__(self, stock=''):
@@ -25,10 +27,10 @@ class Pipeline:
 
         self._deploy: Deploy = None
         self.stock: str = stock
+        self._client = MlflowClient()
 
         mlflow.set_tracking_uri("file:///app/statistics")
-        #mlflow.set_experiment("Deploy")
-
+        
 
     # FAZ DOWNLOAD DOS DADOS DE TREINO
     def _download_data(self, ticker: (str | list[str]), start: str, end: str) -> None:
@@ -56,6 +58,7 @@ class Pipeline:
         self._deploy = Deploy(self._hparams)
 
     
+    # FAZ PREDICT
     def predict(self) -> list[float]:
         fetch = Fetch(self.stock, self._hparams.sequence_length, 2)
         data = fetch.get_input()
@@ -64,7 +67,45 @@ class Pipeline:
         return predicted
 
 
+    # PEGA ESTATÍSTICAS DE TODOS OS EXPERIMENTOS
     def get_statistics(self):
-        pass
+        # 1) Pegar todos os experimentos (ativos + arquivados)
+        exps = self._client.search_experiments(view_type=ViewType.ALL)
+        
+        experiments_data = []
+        for exp in exps:
+            exp_dict = {
+                "experiment_id":   exp.experiment_id,
+                "name":            exp.name,
+                "artifact_uri":    exp.artifact_location,
+                "lifecycle_stage": exp.lifecycle_stage,
+                "runs": []
+            }
+
+            # 2) Buscar todos os runs desse experimento
+            runs = self._client.search_runs(
+                experiment_ids=[exp.experiment_id],
+                filter_string="",  # sem filtro p/ trazer tudo
+                order_by=["attributes.start_time DESC"],
+                max_results=500  # ajusta conforme seu volume
+            )
+
+            # 3) Extrair params, metrics e metadados de cada run
+            for run in runs:
+                info, data = run.info, run.data
+                exp_dict["runs"].append({
+                    "run_id":       info.run_id,
+                    "status":       info.status,
+                    "start_time":   info.start_time,
+                    "end_time":     info.end_time,
+                    "params":       dict(data.params),
+                    "metrics":      dict(data.metrics),
+                    "tags":         dict(data.tags),
+                    "artifact_uri": info.artifact_uri
+                })
+
+            experiments_data.append(exp_dict)
+
+        return experiments_data
 
 

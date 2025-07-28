@@ -68,10 +68,11 @@ def predict():
         }), 200
 
 
-# pega estatísticas do modelo
-@app.route('/statistics')
-def statistics():
-    pass
 
+# pega estatísticas do modelo
+@app.route('/statistics', methods=['GET'])
+def statistics():
+    statistics = pipeline.get_statistics()
+    return jsonify({"experiments": statistics}), 200
 
 

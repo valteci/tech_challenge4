@@ -36,6 +36,7 @@ class Train:
         self._device = torch.device(hparams.device)
         self._model = StockLSTM(hparams).to(self._device)
         self._loss_function = nn.MSELoss()
+        
 
         self._optimizer = optim.Adam(
             self._model.parameters(),
@@ -193,16 +194,24 @@ class Train:
             print(f"Epoch {epoch:03d} — Train Loss: {tr_loss:.6f} | Val Loss: {va_loss:.6f}")
 
 
-        final_rmse = 2.3
-        mlflow.log_metric("final_rmse", final_rmse)
+        final_rmse = 0.0
+        final_mape = 0.0
 
+        mlflow.log_metric("final_rmse", final_rmse)
+        mlflow.log_metric("final_mape", final_mape)
+
+        mlflow.log_metric("best_val_loss", best_val)
         print("Treino concluído. Melhor Val Loss:", best_val)
 
 
     def train(self):
 
+        # Nome do experimento no mlflow
         now = time.strftime("%Y-%m-%d-%H:%M:%S")
         mlflow.set_experiment(now)
+
+        # Tempo inicial em que o treinamento começou:
+        epoch_start = time.perf_counter()
 
         with mlflow.start_run():
             mlflow.log_params({
@@ -233,7 +242,12 @@ class Train:
             self._load_data_loader()
             self._train()
 
+            # Tempo final em que o treinamento terminou
+            epoch_end = time.perf_counter()
 
+            delta = epoch_end - epoch_start
+
+            mlflow.log_metric("training_time", delta)
 
 
 
