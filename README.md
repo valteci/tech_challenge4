@@ -253,7 +253,7 @@ A API expõe três endpoints principais para treinar o modelo, gerar previsões 
 
 
 # HIPERPARÂMETROS USADOS E TREINAMENTO
-O modelo foi projetado para ser otimizado no treinamento, de modo que consiga ser treinado na maioria das CPUs em apenas alguns minutos. Por esse motivo, foi adotado algumas medidas que aceleraram muito o tempo de treino e que geraram pouco ou nenhum impacto relevante no desempenho do modelo, dentre elas, podemos citar:
+O modelo foi projetado para ser otimizado no treinamento, de modo que consiga ser treinado na maioria das CPUs em apenas alguns minutos. Por esse motivo, foram adotadas algumas medidas que aceleraram muito o tempo de treino e que geraram pouco ou nenhum impacto relevante no desempenho do modelo, dentre elas, podemos citar:
 * Usar apenas a feature 'Close', as outras features não mostraram aumento relevante no desempenho do modelo.
 
 * Treinar o modelo apenas para 1 ação específica. Treinar o modelo com várias ações significa ter mais dados históricos e consequentemente mais tempo de treinamento.
@@ -262,15 +262,15 @@ O modelo foi projetado para ser otimizado no treinamento, de modo que consiga se
 
 O modelo foi treinado de modo que consiga receber os últimos 20 preços de fechamento da ação (sequence_length=20) e retornar quais serão os próximos 10 preços de fechamento (future_steps=10).
 
-Foi criado uma classe chamada Hparams, que tem o objetivo de centralizar os hiperparâmetros que serão usados pelo modelo.
+Foi criada uma classe chamada Hparams, que tem o objetivo de centralizar os hiperparâmetros que serão usados pelo modelo.
 
 * Os hiperparâmetros globais usados foram:
   * Épocas de treinamento:  150
   * batch_size:             32
-  * learning_rate:          0,0005
-  * weight_decay:           0,00001
+  * learning_rate:          0.0005
+  * weight_decay:           0.00001
   * seed:                   6544
-  * train_size:             0,7 
+  * train_size:             0.7 
   * optimizer:              Adam
   * loss function:          MSE
 
@@ -282,7 +282,7 @@ Foi criado uma classe chamada Hparams, que tem o objetivo de centralizar os hipe
     * batch_first:  True
 
   * Segunda camada - Dropout:
-    * p: 0,1
+    * p: 0.1
 
   * Terceira camada - LSTM:
     * input_size:   40,
@@ -291,7 +291,7 @@ Foi criado uma classe chamada Hparams, que tem o objetivo de centralizar os hipe
     * batch_first:  True
 
   * Quarta camada - Dropout:
-    * p: 0,1
+    * p: 0.1
 
   * Quinta camada - Linear:
     * input_size:   40
