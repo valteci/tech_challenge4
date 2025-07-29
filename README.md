@@ -61,9 +61,40 @@ As datas que o projeto usa estão no formato [ISO 8601](https://www.iso.org/iso-
 As ações seguem a nomenclatura da B3, o que significa que a API usa o mesmo nome que está na B3. Como o `yfinance` usa um ".SA" no final das ações brasileiras, é possível passar para a API tanto `VALE3`, como `VALE3.SA`, por exemplo.
 
 
+# TECNOLOGIAS UTILIZADAS
+O projeto utilizou, dentre outras, as principais tecnologias/bibliotecas:
+* **[Docker](https://www.docker.com/)**: plataforma de containerização que empacota a aplicação, suas dependências e configurações em imagens isoladas. No projeto, o docker foi usado para garantir que a API e o pipeline de ML rodem de forma consistente em qualquer ambiente, facilitando deploy e escalonamento.
+
+* **[Flask](https://flask.palletsprojects.com/en/stable/)**: micro-framework web em Python, leve e extensível, usado para criar a API RESTful. Nesse projeto, Flask expõe endpoints para treinamento, predição e estatísticas do modelo.
+
+* **[gunicorn](https://gunicorn.org/)**: servidor WSGI (Web Server Gateway Interface) para aplicações Python, responsável por gerenciar múltiplos processos/workers e servir a aplicação Flask em produção com maior desempenho e tolerância a falhas.
+
+* **[pytorch](https://pytorch.org/)**: biblioteca de deep learning em Python, com suporte a tensores e diferenciação automática. PyTorch foi usado para implementar e treinar o modelo LSTM, definindo arquitetura, cálculo de perdas (RMSE, MAPE) e loops de otimização.
+
+* **[MLflow](https://mlflow.org/)**: plataforma de gestão de experimentos de machine learning que registra parâmetros, métricas, artefatos e modelos. Integrado no pipeline de treinamento, o MLflow permite comparar diferentes runs, versionar hiperparâmetros e reproduzir resultados de forma simples.
+
 
 # COMO RODAR LOCALMENTE
+Recomenda-se usar o docker para rodar o projeto localmente independentemente do SO que você esteja usando (Windows, Linux ou MacOS)
 
+Para rodar o projeto, siga os passos abaixo:
+
+1. Faça o download desse projeto.
+
+2. Se você ainda não tiver o docker instalado, baixe-o no [site oficial](https://docs.docker.com/get-started/get-docker/).
+
+3. Na raiz do projeto, rode o seguinte comando para fazer o build do Dockerfile, certifique-se de ter ao menos 10 GB livres de armazenamento:
+```bash
+docker build -t modelo-deep-learning .
+```
+
+4. Certifique-se de que a porta 5000 esteja liberada na sua máquina e rode o container com o seguinte comando:
+```bash
+docker run \
+    -dp 5000:5000 \
+    --name api \
+    modelo-deep-learning
+```
 
 # ROTAS DA API
 
