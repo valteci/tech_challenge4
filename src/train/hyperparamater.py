@@ -17,7 +17,7 @@ class Hparams(BaseModel):
     aplicando validações automáticas e conversão de tipos estrita. Entre os
     parâmetros definidos estão:
       - Lista de features de entrada
-      - Tamanho e número de camadas ocultas (hidden_size, num_layers)
+      - Tamanho e número de camadas ocultas (hidden_size)
       - Taxas de dropout
       - Comprimento da sequência e tamanho de batch
       - Taxa de aprendizado e weight decay
@@ -44,7 +44,6 @@ class Hparams(BaseModel):
     )
 
     hidden_size:    int   = Field(50,   gt=0)
-    num_layers:     int   = Field(2,    gt=0)
     dropout:        float = Field(0.2,  ge=0.0, lt=1.0)
     sequence_length:int   = Field(60,   gt=0)
     batch_size:     int   = Field(32,   gt=0)

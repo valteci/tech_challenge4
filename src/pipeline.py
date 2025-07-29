@@ -32,8 +32,7 @@ class Pipeline:
         self._hparams = Hparams(
             features        = ['Close'],
             hidden_size     = 40,
-            num_layers      = 2,
-            dropout         = 0.5,
+            dropout         = 0.1,
             sequence_length = 20,
             future_steps    = 10,
             batch_size      = 32,

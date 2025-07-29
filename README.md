@@ -222,7 +222,6 @@ A API expõe três endpoints principais para treinar o modelo, gerar previsões 
               "hidden_size": "40",
               "learning_rate": "0.0005",
               "n_epochs": "150",
-              "num_layers": "2",
               "seed": "6544",
               "sequence_length": "20",
               "train_size": "0.7",
@@ -253,7 +252,49 @@ A API expõe três endpoints principais para treinar o modelo, gerar previsões 
 # ARQUITETURA DO MODELO E CAMADAS
 
 
-# HIPERPARÂMETROS USADOS
+# HIPERPARÂMETROS USADOS E TREINAMENTO
+O modelo foi projetado para ser otimizado no treinamento, de modo que consiga ser treinado na maioria das CPUs em apenas alguns minutos. Por esse motivo, foi adotado algumas medidas que aceleraram muito o tempo de treino e que geraram pouco ou nenhum impacto relevante no desempenho do modelo, dentre elas, podemos citar:
+* Usar apenas a feature 'Close', as outras features não mostraram aumento relevante no desempenho do modelo.
+
+* Treinar o modelo apenas para 1 ação específica. Treinar o modelo com várias ações significa ter mais dados históricos e consequentemente mais tempo de treinamento.
+
+* Reduzir a janela de dados históricos. Foi observado que treinar o modelo com dados de 2010 a 2025 teve praticamente o mesmo desempenho que treiná-lo com uma janela de 2020 a 2025, o que reduz o tempo de treinamento.
+
+
+
+Foi criado uma classe chamada Hparams, que tem o objetivo de centralizar os hiperparâmetros que serão usados pelo modelo.
+
+* Os hiperparâmetros globais usados foram:
+  * Épocas de treinamento:  150
+  * batch_size:             32
+  * learning_rate:          0,0005
+  * weight_decay:           0,00001
+  * seed:                   6544
+  * train_size:             0,7 
+
+* Hiperparâmetros usados por camada
+  * Primeira camada - LSTM:
+    * input_size:   1
+    * hidden_size:  40
+    * num_layers:   1
+    * batch_first:  True
+
+  * Segunda camada - Dropout:
+    * p: 0,1
+
+  * Terceira camada - LSTM:
+    * input_size:   40,
+    * hidden_size:  40,
+    * num_layers:   1,
+    * batch_first:  True
+
+  * Quarta camada - Dropout:
+    * p: 0,1
+
+  * Quinta camada - Linear:
+    * input_size:   40
+    * hidden_size:  10
+
 
 
 # RESULTADOS OBTIDOS

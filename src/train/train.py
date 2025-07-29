@@ -444,7 +444,6 @@ class Train:
         with mlflow.start_run():
             mlflow.log_params({
                 "hidden_size":    self._hparams.hidden_size,
-                "num_layers":     self._hparams.num_layers,
                 "dropout":        self._hparams.dropout,
                 "sequence_length":self._hparams.sequence_length,
                 "learning_rate":  self._hparams.learning_rate,

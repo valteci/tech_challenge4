@@ -41,7 +41,7 @@ class StockLSTM(nn.Module):
         )
 
         # Camada de dropout
-        self.dp  = nn.Dropout(0.3)
+        self.dp  = nn.Dropout(hparams.dropout)
 
         # Camada de LSTM
         self.lstm2 = nn.LSTM(
@@ -52,7 +52,7 @@ class StockLSTM(nn.Module):
         )
 
         # Camada de dropout
-        self.dp_out = nn.Dropout(0.1)
+        self.dp_out = nn.Dropout(hparams.dropout)
 
         # 4) Camada de saída linear
         self.output_layer = nn.Linear(
