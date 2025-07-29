@@ -70,6 +70,10 @@ def predict():
         ), 400
     
     stock: str      = data['stock']
+
+    if not stock.endswith('.SA'):
+        stock += '.SA'
+        
     pipeline.stock  = stock
 
     # Se o modelo não tiver ativo, coloca em produção
