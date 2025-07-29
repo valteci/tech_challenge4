@@ -86,9 +86,6 @@ Thumbs.db
 # Dados brutos temporários
 data/raw/
 
-# Pasta de Dados
-data/
-
 
 # Dados csv
 *.csv
