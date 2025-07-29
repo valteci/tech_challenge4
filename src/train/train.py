@@ -44,7 +44,7 @@ class Train:
             weight_decay=self._hparams.weight_decay
         )
 
-    # 1) CARREGAR DADOS
+    # CARREGAR DADOS
     def _load_data(self):
         self._data = []  # esvazia qualquer valor anterior
         for root, dirs, files in os.walk(Train.DATA_PATH):
@@ -60,7 +60,7 @@ class Train:
             )
 
 
-    # 2) GERA UMA LISTA DE JANELAS A PARTIR DE UM BLOCO CONTÍNUO
+    # GERA UMA LISTA DE JANELAS A PARTIR DE UM BLOCO CONTÍNUO
     @staticmethod
     def _make_windows(data: np.ndarray, seq_len: int, fut_len: int):
         X, y = [], []
@@ -73,7 +73,7 @@ class Train:
         
         return X, y   
 
-    # 8) MÉTODO PARA AVALIAÇÃO FINAL
+    # MÉTODO PARA AVALIAÇÃO FINAL
     def _evaluate(self):
         self._model.eval()
         all_preds   = []
@@ -92,7 +92,7 @@ class Train:
         
         return all_preds.cpu().numpy(), all_targets.cpu().numpy()
 
-    # 3) GERAR SEQUÊNCIAS JÁ SEPARADAS EM TREINO / VAL
+    # GERAR SEQUÊNCIAS JÁ SEPARADAS EM TREINO / VAL
     def _create_sequences(self):
         seq_len     = self._hparams.sequence_length
         fut_len     = self._hparams.future_steps
@@ -125,24 +125,9 @@ class Train:
         self._y_train = np.stack(train_y) # [n_train, fut_len]
         self._X_test  = np.stack(val_X)
         self._y_test  = np.stack(val_y)
+   
 
-    
-    # 3) DIVISÃO EM TREINO E TESTE
-    def _train_test_split(self, train_size: float):
-
-        if train_size <= 0:
-            raise ValueError('train_size deve ser > 0')
-
-        n_train = int(train_size * len(self._X))
-
-        self._X_train = self._X[:n_train]
-        self._y_train = self._y[:n_train]
-
-        self._X_test = self._X[n_train:]
-        self._y_test = self._y[n_train:]
-        
-
-    # 4) CARREGAR OS DADOS NO DATALOADER
+    # CARREGAR OS DADOS NO DATALOADER
     def _load_data_loader(self):
         train_ds = TensorDataset(
             torch.from_numpy(self._X_train), 
@@ -167,7 +152,7 @@ class Train:
         )
         
 
-    # 5) TREINANDO 1 EPOCA
+    # TREINANDO 1 EPOCA
     def _train_epoch(self):
         self._model.train()
         total_loss = 0.0
@@ -184,7 +169,7 @@ class Train:
         return total_loss / len(self._train_loader.dataset)
 
 
-    # 6) TESTANDO 1 EPOCA
+    # TESTANDO 1 EPOCA
     def _eval_epoch(self):
         self._model.eval()
         total_loss = 0.0
@@ -198,7 +183,7 @@ class Train:
         return total_loss / len(self._test_loader.dataset)
 
 
-    # 7) TRAIN (ATUALIZADO)
+    # TREINA O MODELO
     def _train(self):
         history = {"train_loss": [], "val_loss": []}
         best_val = float('inf')
