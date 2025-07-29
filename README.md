@@ -101,7 +101,7 @@ A API expõe três endpoints principais para treinar o modelo, gerar previsões 
 
 * POST `/train`: 
   * Descrição: 
-  Treina o modelo LSTM para o ticker e período informados, atualiza os pesos em saved_weights/ e faz deploy do novo modelo.
+  Treina o modelo LSTM para o ticker e período informados, atualiza os pesos em saved_weights/ e faz deploy do novo modelo. Essa rota pode demorar alguns minutos para devolver a resposta, já que o treinamento do modelo pode demorar mais ou menos a depender das configurações de hardware da máquina em que foi feito o deploy.
 
   * Body:
   ```json
@@ -111,7 +111,7 @@ A API expõe três endpoints principais para treinar o modelo, gerar previsões 
     "fim"       : "YYYY-MM-DD"
   }
   ```
-  Precisa de um json com 3 campos: `stock`, `inicio` e `fim`.
+  Precisa de um JSON com 3 campos: `stock`, `inicio` e `fim`.
   `stock`: é ticker do ativo e pode ou não vir com o sufixo '.SA'.
   `inicio`: data de início de cotação para o treinamento.
   `fim`: data de fim de cotação para o treinamento.
@@ -138,7 +138,116 @@ A API expõe três endpoints principais para treinar o modelo, gerar previsões 
 
 * POST `/predict`: 
   * Descrição: 
-  gera previsão de preços com o modelo atualmente em produção. Se o modelo ainda não estiver deployado, o endpoint faz deploy automático antes de prever.
+  Gera previsão de preços com o modelo atualmente em produção. Se o modelo ainda não estiver deployado, o endpoint faz deploy automático antes de prever. O retorno é um JSON com os próximos 10 preços de fechamento da ação.
+
+  * Body:
+  ```json
+  {
+    "stock": "VALE3",
+  }
+  ```
+  Só precisa do ticker da ação em que o modelo foi treinado. Pode-se colocar o '.SA' ou não no final do ticker.
+
+  * Exemplo de resposta de sucesso
+  ```json
+  {
+    "preco": "[55.52, 55.28, 55.44, 55.38, 55.65, 55.59, 55.82, 55.38, 55.59, 55.63]"
+  }
+  ```
+
+  * Exemplo de uso (curl):
+  ```bash
+  curl -X POST http://localhost:5000/predict \
+  -H "Content-Type: application/json" \
+  -d '{
+    "stock": "VALE3"
+  }'
+  ```
+
+* GET `/statistics`
+  * Descrição:
+  Retorna um JSON com todas as estatísticas de experimentos registrados no MLflow (runs, parâmetros, métricas e timestamps).
+
+  * Request:
+  Sem body ou parâmetros.
+
+  * Exemplo de resposta de sucesso
+  ```json
+  {
+    "experiments": [
+      {
+        "artifact_uri": "file:///app/statistics/638177982245090140",
+        "experiment_id": "638177982245090140",
+        "lifecycle_stage": "active",
+        "name": "2025-07-29-15:06:30",
+        "runs": [
+          {
+            "artifact_uri": "file:///app/statistics/638177982245090140/d744f04f18c940428fa2a951b345caca/artifacts",
+            "end_time": 1753801669223,
+            "metrics": {
+              "best_val_loss": 9.407169958725763,
+              "final_mape": 4.3126071617007256,
+              "final_rmse": 3.063501184276288,
+              "history_train_loss": 859.9665283330822,
+              "history_val_loss": 677.8857664466356,
+              "mape_step_1": 4.484681785106659,
+              "mape_step_10": 4.157597199082375,
+              "mape_step_2": 4.424845799803734,
+              "mape_step_3": 4.374302551150322,
+              "mape_step_4": 4.3496400117874146,
+              "mape_step_5": 4.37844879925251,
+              "mape_step_6": 4.273915663361549,
+              "mape_step_7": 4.211739078164101,
+              "mape_step_8": 4.257416725158691,
+              "mape_step_9": 4.2134840041399,
+              "rmse_step_1": 3.294871512470768,
+              "rmse_step_10": 2.8442083974422574,
+              "rmse_step_2": 3.2504270713146384,
+              "rmse_step_3": 3.2042310340345646,
+              "rmse_step_4": 3.13973212004536,
+              "rmse_step_5": 3.090356371924307,
+              "rmse_step_6": 3.0218948253150892,
+              "rmse_step_7": 2.9672174613930475,
+              "rmse_step_8": 2.9323836877363183,
+              "rmse_step_9": 2.889689361086527,
+              "train_loss": 74.97250994418529,
+              "training_time": 78.58659790689126,
+              "val_loss": 12.38049417687941
+            },
+            "params": {
+              "batch_size": "32",
+              "device": "cpu",
+              "dropout": "0.5",
+              "future_steps": "10",
+              "hidden_size": "40",
+              "learning_rate": "0.0005",
+              "n_epochs": "150",
+              "num_layers": "2",
+              "seed": "6544",
+              "sequence_length": "20",
+              "train_size": "0.7",
+              "weight_decay": "1e-05"
+            },
+            "run_id": "d744f04f18c940428fa2a951b345caca",
+            "start_time": 1753801590639,
+            "status": "FINISHED",
+            "tags": {
+              "mlflow.runName": "smiling-bass-287",
+              "mlflow.source.name": "/usr/local/bin/flask",
+              "mlflow.source.type": "LOCAL",
+              "mlflow.user": "root"
+            }
+          }
+        ]
+      }
+    ]
+  }
+  ```
+
+  * Exemplo de uso (curl):
+  ```bash
+  curl http://localhost:5000/statistics
+  ```
 
 
 # ARQUITETURA DO MODELO E CAMADAS
@@ -152,22 +261,6 @@ A API expõe três endpoints principais para treinar o modelo, gerar previsões 
 
 # LICENÇA
 Este projeto está licenciado sob a [MIT License](LICENSE).
-
-
-```bash
-docker build -t tech_challenge .
-```
-
-```bash
-docker run \
-    -dp 5000:5000 \
-    --name tech_challenge \
-    -v ./src:/app/src \
-    -v ./data:/app/data \
-    -v ./saved_weights:/app/saved_weights \
-    -v ./statistics:/app/statistics \
-    tech_challenge
-```
 
 
 
