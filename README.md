@@ -253,7 +253,10 @@ A API expõe três endpoints principais para treinar o modelo, gerar previsões 
 
 
 # ARQUITETURA DO MODELO E CAMADAS
-A fazer...
+O modelo implementado é uma LSTM com 5 camadas, sendo 2 camadas LSTM, 2 camadas de Dropout e 1 camada Linear. 
+
+A LSTM foi estruturada conforme o diagrama a seguir:
+![Imagem não carregada!](/img/LSTM.png)
 
 # HIPERPARÂMETROS USADOS E TREINAMENTO
 O modelo foi projetado para ser otimizado no treinamento, de modo que consiga ser treinado na maioria das CPUs em apenas alguns minutos. Por esse motivo, foram adotadas algumas medidas que aceleraram muito o tempo de treino e que geraram pouco ou nenhum impacto relevante no desempenho do modelo, dentre elas, pode-se citar:
