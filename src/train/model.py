@@ -4,7 +4,30 @@ from src.train.hyperparamater import Hparams
 
 class StockLSTM(nn.Module):
     """
-    Estrutura LSTM, com fluxo de dados explícito.
+    Rede neural LSTM para previsão de preços de ações.
+
+    Este modelo encapsula duas camadas LSTM sequenciais com camadas de dropout 
+    intermediárias e uma camada linear de saída, permitindo que, a partir de uma 
+    sequência histórica de preços, sejam previstas as cotações para os próximos 
+    passos definidos.
+
+    A estrutura inclui:
+      - Uma primeira camada LSTM para extrair padrões temporais da sequência de entrada.
+      - Camada de Dropout para reduzir overfitting após a primeira LSTM.
+      - Segunda camada LSTM com tamanho de estado oculto ajustado conforme o número 
+        de passos futuros, apoiada por outro Dropout.
+      - Camada linear final que mapeia o último estado oculto para a predição dos 
+        valores futuros.
+
+    A saída do modelo é um tensor de formato [batch_size, future_steps], com valores 
+    arredondados conforme necessário pelo pipeline de inferência.
+
+    Attributes:
+        lstm1 (nn.LSTM): primeira camada LSTM para processar a entrada.
+        dp (nn.Dropout): camada de dropout aplicada após lstm1.
+        lstm2 (nn.LSTM): segunda camada LSTM para ampliar a capacidade de modelagem.
+        dp_out (nn.Dropout): camada de dropout aplicada ao último estado oculto.
+        output_layer (nn.Linear): camada linear que gera as previsões para os próximos passos.
     """
     def __init__(self, hparams: Hparams):
         super().__init__()

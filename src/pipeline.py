@@ -8,6 +8,25 @@ from mlflow.tracking import MlflowClient
 from mlflow.entities import ViewType
 
 class Pipeline:
+    """
+    Orquestra todo o fluxo de trabalho de machine learning, atuando como intermediário
+    entre o servidor Flask (app.py) e os módulos responsáveis por download de dados,
+    treinamento, deploy, predição e coleta de estatísticas de experimentos.
+
+    A classe encapsula a configuração de hiperparâmetros, interage com o MLflow para
+    rastreamento de experimentos e fornece métodos de alto nível para:
+      - Baixar dados de uma ou várias ações (_download_data)
+      - Treinar o modelo LSTM (_train_model)
+      - Fazer deploy do modelo treinado (deploy_model)
+      - Gerar previsões para o preço da ação (predict)
+      - Recuperar estatísticas de todos os experimentos registrados em MLflow (get_statistics)
+
+    Attributes:
+        _hparams (Hparams): configuração de hiperparâmetros do modelo.
+        _deploy (Deploy | None): objeto responsável pelo deploy/inferência do modelo.
+        stock (str): código da ação usada em operações de predição.
+        _client (MlflowClient): cliente MLflow para acesso a experimentos e runs.
+    """
     def __init__(self, stock=''):
         # Inicia Hiperparâmetros
         self._hparams = Hparams(

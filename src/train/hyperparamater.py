@@ -9,7 +9,30 @@ from pydantic import (
 )
 
 class Hparams(BaseModel):
-    # Configurações globais do modelo
+    """
+    Configuração e validação de hiperparâmetros para o modelo LSTM.
+
+    Esta classe, baseada em Pydantic, agrupa todos os parâmetros necessários
+    para o treinamento e inferência do modelo de previsão de preços de ações,
+    aplicando validações automáticas e conversão de tipos estrita. Entre os
+    parâmetros definidos estão:
+      - Lista de features de entrada
+      - Tamanho e número de camadas ocultas (hidden_size, num_layers)
+      - Taxas de dropout
+      - Comprimento da sequência e tamanho de batch
+      - Taxa de aprendizado e weight decay
+      - Número de épocas de treinamento
+      - Número de passos futuros a serem previstos
+      - Semente para reprodutibilidade
+      - Proporção de divisão entre treino e teste
+      - Dispositivo de execução (cpu, cuda, mps), com validação de disponibilidade
+
+    Adicionalmente, fornece um campo computado (`input_size`) que representa a
+    quantidade de features, útil para configurar camadas de entrada em redes.
+    """
+
+
+
     model_config = ConfigDict(
         extra="forbid",# erro se tentar passar campo desconhecido
         strict=True    # conversão de tipos implícita é impedida

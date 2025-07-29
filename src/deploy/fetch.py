@@ -3,6 +3,19 @@ import yfinance as yf
 import time
 
 class Fetch:
+    """
+    Automatiza a coleta dos dados históricos mais recentes de um ativo para gerar a janela de entrada
+    necessária ao modelo LSTM, sem que o usuário precise buscar manualmente os preços.
+
+    Esta classe calcula o período de download a partir de hoje subtraindo `years_to_fetch` anos,
+    faz o download via yfinance e expõe os últimos `sequence_length` registros prontos para inferência.
+
+    Attributes:
+        _stock_name (str): código do ativo financeiro a ser buscado.
+        _sequence_length (int): quantidade de pontos de dados finais necessários para o modelo.
+        _years_to_fetch (int): número de anos para recuar ao iniciar a coleta de dados.
+        _data (pd.DataFrame | None): DataFrame que armazena os dados baixados após `_fetch()`.
+    """
     def __init__(
             self,
             stock_name      : str,

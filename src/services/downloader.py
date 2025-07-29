@@ -3,6 +3,17 @@ import os
 import shutil
 
 class Downloader():
+    """
+    Gerencia o download de dados históricos de mercado usando yfinance,
+    salvando-os como CSVs em um diretório local e garantindo que a pasta
+    de destino seja limpa antes de cada nova operação.
+
+    Attributes:
+        SAVING_PATH (str): caminho da pasta onde os arquivos CSV serão salvos.
+        _ticker (str): símbolo do ativo financeiro a ser baixado.
+        _start (str): data de início para o download (formato 'YYYY-MM-DD').
+        _end (str): data de término para o download (formato 'YYYY-MM-DD').
+    """
 
     SAVING_PATH='./data'
 

@@ -6,6 +6,18 @@ import pandas as pd
 import numpy as np
 
 class Deploy:
+    """
+    Carrega um modelo LSTM treinado e oferece método de inferência para gerar previsões
+    a partir de dados históricos de preços.
+
+    Ao instanciar, a classe:
+      - Inicializa a arquitetura StockLSTM com os hiperparâmetros fornecidos.
+      - Carrega os pesos do melhor modelo salvo durante o treinamento.
+      - Ajusta o modelo para o dispositivo (CPU, CUDA ou MPS) e o coloca em modo de avaliação.
+
+    Através do método `predict`, converte um DataFrame de preços em um tensor, executa
+    forward pass no modelo e retorna as previsões como um array NumPy.
+    """
     def __init__(self, hparams: Hparams):
         self._hparams   = hparams
         self._model     = StockLSTM(hparams=hparams)
