@@ -32,7 +32,7 @@ O projeto tem a seguinte estrutura de diretórios:
 
 * `img/`: diretório que armazena as imagens do README.md.
 
-* `saved_weights/`: diretório reservado para os pesos do modelo treinado (arquivos .pt ou similares). A classe Train grava aqui o checkpoint final (e, opcionalmente, intermediário) para posterior carregamento pelo serviço de deploy.
+* `saved_weights/`: diretório reservado para os pesos do modelo treinado (arquivos .pth ou similares). A classe Train grava aqui o checkpoint final (e, opcionalmente, intermediário) para posterior carregamento pelo serviço de deploy.
 
 * `src/`: diretório que contém o código fonte do projeto em python3.
 
@@ -253,10 +253,10 @@ A API expõe três endpoints principais para treinar o modelo, gerar previsões 
 
 
 # ARQUITETURA DO MODELO E CAMADAS
-
+A fazer...
 
 # HIPERPARÂMETROS USADOS E TREINAMENTO
-O modelo foi projetado para ser otimizado no treinamento, de modo que consiga ser treinado na maioria das CPUs em apenas alguns minutos. Por esse motivo, foram adotadas algumas medidas que aceleraram muito o tempo de treino e que geraram pouco ou nenhum impacto relevante no desempenho do modelo, dentre elas, podemos citar:
+O modelo foi projetado para ser otimizado no treinamento, de modo que consiga ser treinado na maioria das CPUs em apenas alguns minutos. Por esse motivo, foram adotadas algumas medidas que aceleraram muito o tempo de treino e que geraram pouco ou nenhum impacto relevante no desempenho do modelo, dentre elas, pode-se citar:
 * Usar apenas a feature 'Close', as outras features não mostraram aumento relevante no desempenho do modelo.
 
 * Treinar o modelo apenas para 1 ação específica. Treinar o modelo com várias ações significa ter mais dados históricos e consequentemente mais tempo de treinamento.
@@ -303,15 +303,15 @@ Foi criada uma classe chamada Hparams, que tem o objetivo de centralizar os hipe
 
 
 # RESULTADOS OBTIDOS
-Por padrão, o modelo vem treinado para prever o preço das ações da VALE3, nesse caso, as métricas e resultados obtidos vão ser em relação a esse ativo financeiro. Foram utilizados o RMSE e MAPE para medir o desempenho.
+Por padrão, o modelo vem treinado para prever o preço das ações da VALE3, nesse caso, as métricas e resultados obtidos vão ser em relação a esse ativo financeiro. Foram utilizados RMSE e MAPE para medir o desempenho.
 
-Considerando a arquitetura da rede apresentada na seção [arquitetura do modelo e camadas](#arquitetura-do-modelo-e-camadas) e também os hiperparâmetros e configurações apresentados na seção [hiperparâmetros usados e treinamento](#hiperparâmetros-usados-e-treinamento), foi possível obter os seguinte resultados:
+Considerando a arquitetura da rede apresentada na seção [arquitetura do modelo e camadas](#arquitetura-do-modelo-e-camadas) e também os hiperparâmetros e configurações apresentados na seção [hiperparâmetros usados e treinamento](#hiperparâmetros-usados-e-treinamento), foi possível obter os seguintes resultados:
 ![imagem não carregada](img/resultados.png)
 RMSE = 2.9921
 MAPE = 4.27%
 MSE = 8.967755826560717
 
-Interpretando os resultados obtidos podemos concluir que o modelo erra o preço da VALE3 para os próximos 10 dias, em média, em R$2.99, ou ainda em 4.27%.
+Interpretando os resultados obtidos, pode-se concluir que o modelo erra o preço da VALE3 para os próximos 10 dias, em média, em R$2.99, ou ainda em 4.27% em relação ao preço atual (preço atual que a VALE3 estava quando o modelo fez a previsão).
 
 # LICENÇA
 Este projeto está licenciado sob a [MIT License](LICENSE).
