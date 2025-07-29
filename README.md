@@ -19,6 +19,7 @@ O projeto tem a seguinte estrutura de diretórios:
 ```text
 .
 ├── data/
+├── img/
 ├── saved_weights/
 ├── src/
 │   ├── deploy/
@@ -28,6 +29,8 @@ O projeto tem a seguinte estrutura de diretórios:
 ```
 
 * `data/`: diretório onde ficam os arquivos brutos e/ou processados de séries históricas de preços. É aqui que o `Downloader` (em src/services) salva os CSVs originais para uso no treino e na inferência.
+
+* `img/`: diretório que armazena as imagens do README.md.
 
 * `saved_weights/`: diretório reservado para os pesos do modelo treinado (arquivos .pt ou similares). A classe Train grava aqui o checkpoint final (e, opcionalmente, intermediário) para posterior carregamento pelo serviço de deploy.
 
@@ -258,7 +261,7 @@ O modelo foi projetado para ser otimizado no treinamento, de modo que consiga se
 
 * Treinar o modelo apenas para 1 ação específica. Treinar o modelo com várias ações significa ter mais dados históricos e consequentemente mais tempo de treinamento.
 
-* Reduzir a janela de dados históricos. Foi observado que treinar o modelo com dados de 2010 a 2025 teve praticamente o mesmo desempenho que treiná-lo com uma janela de 2020 a 2025, o que reduz o tempo de treinamento.
+* Reduzir a janela de dados históricos. Foi observado que treinar o modelo com dados de 2010 a 2025 teve praticamente o mesmo desempenho que treiná-lo com uma janela de 2020 a 2025, o que reduz o tempo de treinamento. Por isso, foram usados dados de 2020 a 2025.
 
 O modelo foi treinado de modo que consiga receber os últimos 20 preços de fechamento da ação (sequence_length=20) e retornar quais serão os próximos 10 preços de fechamento (future_steps=10).
 
@@ -300,7 +303,15 @@ Foi criada uma classe chamada Hparams, que tem o objetivo de centralizar os hipe
 
 
 # RESULTADOS OBTIDOS
+Por padrão, o modelo vem treinado para prever o preço das ações da VALE3, nesse caso, as métricas e resultados obtidos vão ser em relação a esse ativo financeiro. Foram utilizados o RMSE e MAPE para medir o desempenho.
 
+Considerando a arquitetura da rede apresentada na seção [arquitetura do modelo e camadas](#arquitetura-do-modelo-e-camadas) e também os hiperparâmetros e configurações apresentados na seção [hiperparâmetros usados e treinamento](#hiperparâmetros-usados-e-treinamento), foi possível obter os seguinte resultados:
+![imagem não carregada](img/resultados.png)
+RMSE = 2.9921
+MAPE = 4.27%
+MSE = 8.967755826560717
+
+Interpretando os resultados obtidos podemos concluir que o modelo erra o preço da VALE3 para os próximos 10 dias, em média, em R$2.99, ou ainda em 4.27%.
 
 # LICENÇA
 Este projeto está licenciado sob a [MIT License](LICENSE).
