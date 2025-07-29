@@ -97,6 +97,48 @@ docker run \
 ```
 
 # ROTAS DA API
+A API expõe três endpoints principais para treinar o modelo, gerar previsões e consultar estatísticas de experimentos. Em todos os exemplos abaixo, o host base é http://localhost:5000.
+
+* POST `/train`: 
+  * Descrição: 
+  Treina o modelo LSTM para o ticker e período informados, atualiza os pesos em saved_weights/ e faz deploy do novo modelo.
+
+  * Body:
+  ```json
+  {
+    "stock"     : "PETR4",
+    "inicio"    : "YYYY-MM-DD",
+    "fim"       : "YYYY-MM-DD"
+  }
+  ```
+  Precisa de um json com 3 campos: `stock`, `inicio` e `fim`.
+  `stock`: é ticker do ativo e pode ou não vir com o sufixo '.SA'.
+  `inicio`: data de início de cotação para o treinamento.
+  `fim`: data de fim de cotação para o treinamento.
+
+
+  * Resposta de sucesso:
+  ```json
+  {
+    "message": "Treino concluido com sucesso! O modelo foi atualizado!"
+  }
+  ```
+
+  * Exemplo de uso (curl):
+  ```bash
+  curl -X POST http://localhost:5000/train \
+  -H "Content-Type: application/json" \
+  -d '{
+    "stock":  "VALE3",
+    "inicio": "2020-01-01",
+    "fim":    "2025-07-28"
+  }'
+  ```
+
+
+* POST `/predict`: 
+  * Descrição: 
+  gera previsão de preços com o modelo atualmente em produção. Se o modelo ainda não estiver deployado, o endpoint faz deploy automático antes de prever.
 
 
 # ARQUITETURA DO MODELO E CAMADAS
