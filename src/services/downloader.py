@@ -6,10 +6,15 @@ class Downloader():
 
     SAVING_PATH='./data'
 
-    def __init__(self, ticker: str = '', start: str = '', end: str = ''):
-        self._ticker = ticker
-        self._start = start
-        self._end = end
+    def __init__(
+            self,
+            ticker  : str = '',
+            start   : str = '',
+            end     : str = ''
+    ):
+        self._ticker    = ticker
+        self._start     = start
+        self._end       = end
 
 
     @property
@@ -17,30 +22,36 @@ class Downloader():
         """Getter method"""
         return self._ticker
     
+
     @property
     def start(self):
         """Getter method"""
         return self._start
     
+
     @property
     def end(self):
         """Getter method"""
         return self._end
     
+
     @ticker.setter
     def ticker(self, value):
         """Setter method"""
         self._ticker = value
+
 
     @start.setter
     def start(self, value):
         """Setter method"""
         self._start = value
 
+
     @end.setter
     def end(self, value):
         """Setter method"""
         self._end = value
+
 
     @staticmethod
     def _remove_files() -> None:
@@ -62,9 +73,8 @@ class Downloader():
                 print(f"Erro removendo '{full_path}': {e}")
 
 
-
     def download(self):
-        """Faz o download dos arquivos"""
+        """Faz o download dos dados"""
         df = yf.download(
             self._ticker,
             start=self._start,
