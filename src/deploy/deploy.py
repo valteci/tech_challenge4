@@ -1,7 +1,6 @@
 from src.train.model import StockLSTM
 from src.train.hyperparamater import Hparams
 from src.train.train import Train
-from src.deploy.fetch import Fetch
 import torch
 import pandas as pd
 import numpy as np
