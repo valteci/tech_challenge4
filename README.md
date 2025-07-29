@@ -260,7 +260,7 @@ O modelo foi projetado para ser otimizado no treinamento, de modo que consiga se
 
 * Reduzir a janela de dados históricos. Foi observado que treinar o modelo com dados de 2010 a 2025 teve praticamente o mesmo desempenho que treiná-lo com uma janela de 2020 a 2025, o que reduz o tempo de treinamento.
 
-
+O modelo foi treinado de modo que consiga receber os últimos 20 preços de fechamento da ação (sequence_length=20) e retornar quais serão os próximos 10 preços de fechamento (future_steps=10).
 
 Foi criado uma classe chamada Hparams, que tem o objetivo de centralizar os hiperparâmetros que serão usados pelo modelo.
 
@@ -271,6 +271,8 @@ Foi criado uma classe chamada Hparams, que tem o objetivo de centralizar os hipe
   * weight_decay:           0,00001
   * seed:                   6544
   * train_size:             0,7 
+  * optimizer:              Adam
+  * loss function:          MSE
 
 * Hiperparâmetros usados por camada
   * Primeira camada - LSTM:
