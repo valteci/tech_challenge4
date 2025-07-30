@@ -46,10 +46,11 @@ class Pipeline:
 
         self._deploy: Deploy = None
         self.stock  : str = stock # nome da ação
-        self._client = MlflowClient()
+        
 
         # seta a pasta para o mlflow
         mlflow.set_tracking_uri("file:///app/statistics")
+        self._client = MlflowClient()
         
 
     # FAZ DOWNLOAD DOS DADOS DE TREINO
