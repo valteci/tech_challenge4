@@ -1,0 +1,14 @@
+artifact_uri: file:///app/statistics/950134047125008458/049bf1e524854a419138c6bd6328cc85/artifacts
+end_time: 1753837639302
+entry_point_name: ''
+experiment_id: '950134047125008458'
+lifecycle_stage: active
+run_id: 049bf1e524854a419138c6bd6328cc85
+run_name: masked-fowl-702
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1753837609000
+status: 3
+tags: []
+user_id: root

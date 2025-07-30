@@ -90,6 +90,4 @@ data/raw/
 # Dados csv
 *.csv
 
-statistics/*
-!statistics/.keep
 
